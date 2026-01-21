@@ -12,6 +12,7 @@
 
 extern volatile bool fpc2530_irq_active;
 
+static uint32_t button_down_start = 0;
 static uint32_t button_down_time = 0;
 static bool button_down = false;
 
@@ -23,6 +24,25 @@ uint32_t hal_check_button_pressed(void)
 	}
 	return button_down ? 0 : button_time;
 
+}
+
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
+{
+    if (GPIO_Pin == USER_BUTTON_Pin) {
+        button_down_time = HAL_GetTick() - button_down_start;
+        button_down = false;
+    }
+    else if (GPIO_Pin == FPC2530_IRQ_Pin) {
+        fpc2530_irq_active = true;
+    }
+}
+
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
+{
+    if (GPIO_Pin == USER_BUTTON_Pin) {
+        button_down_start = HAL_GetTick();
+        button_down = true;
+    }
 }
 
 void hal_set_led_status(hal_led_status_t status)

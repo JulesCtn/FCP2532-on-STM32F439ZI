@@ -1,4 +1,6 @@
-../Core/Src/hal_common.c:18:10:hal_check_button_pressed	3
-../Core/Src/hal_common.c:28:6:hal_set_led_status	3
-../Core/Src/hal_common.c:43:6:hal_reset_device	1
-../Core/Src/hal_common.c:50:6:hal_set_if_config	2
+../Core/Src/hal_common.c:19:10:hal_check_button_pressed	3
+../Core/Src/hal_common.c:29:6:HAL_GPIO_EXTI_Rising_Callback	3
+../Core/Src/hal_common.c:40:6:HAL_GPIO_EXTI_Falling_Callback	2
+../Core/Src/hal_common.c:48:6:hal_set_led_status	3
+../Core/Src/hal_common.c:63:6:hal_reset_device	1
+../Core/Src/hal_common.c:70:6:hal_set_if_config	2
