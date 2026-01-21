@@ -19,9 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx.h"
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
 
 #include "hal_common.h"
 
@@ -67,21 +64,6 @@ static const fpc_cmd_callbacks_t cmd_cb = {
     .on_identify = on_identify,
     .on_list_templates = on_list_templates
 };
-
-// Implémentation facultative des LEDs (selon votre carte Nucleo)
-void hal_set_led_status(hal_led_status_t status) {
-    switch(status) {
-        case HAL_LED_STATUS_MATCH:    // Blue LED
-            HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
-            break;
-        case HAL_LED_STATUS_ERROR:    // Red LED
-            HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
-            break;
-        default:
-        	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
-        	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
-    }
-}
 
 static void process_state(void)
 {
@@ -225,8 +207,8 @@ int main(void)
 		  if (result != FPC_RESULT_OK && result != FPC_PENDING_OPERATION) {
 			  fpc_sample_logf("Bad incoming data (%d). Wait and try again in some sec",
 				  result);
-			  fpc_hal_delay_ms(100);
-			  uart_host_rx_data_clear();
+			  HAL_Delay(100);
+			  uart6_host_rx_data_clear();
 		  }
 		  process_state();
 	  }
@@ -344,14 +326,6 @@ void SystemClock_Config(void)
   */
 static void MX_SPI1_Init(void)
 {
-
-  /* USER CODE BEGIN SPI1_Init 0 */
-
-  /* USER CODE END SPI1_Init 0 */
-
-  /* USER CODE BEGIN SPI1_Init 1 */
-
-  /* USER CODE END SPI1_Init 1 */
   /* SPI1 parameter configuration*/
   hspi1.Instance = SPI1;
   hspi1.Init.Mode = SPI_MODE_MASTER;
@@ -369,10 +343,6 @@ static void MX_SPI1_Init(void)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN SPI1_Init 2 */
-
-  /* USER CODE END SPI1_Init 2 */
-
 }
 
 /**
@@ -382,14 +352,6 @@ static void MX_SPI1_Init(void)
   */
 static void MX_USART3_UART_Init(void)
 {
-
-  /* USER CODE BEGIN USART3_Init 0 */
-
-  /* USER CODE END USART3_Init 0 */
-
-  /* USER CODE BEGIN USART3_Init 1 */
-
-  /* USER CODE END USART3_Init 1 */
   huart3.Instance = USART3;
   huart3.Init.BaudRate = 115200;
   huart3.Init.WordLength = UART_WORDLENGTH_8B;
@@ -402,10 +364,6 @@ static void MX_USART3_UART_Init(void)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART3_Init 2 */
-
-  /* USER CODE END USART3_Init 2 */
-
 }
 
 /**
@@ -415,14 +373,6 @@ static void MX_USART3_UART_Init(void)
   */
 static void MX_USART6_UART_Init(void)
 {
-
-  /* USER CODE BEGIN USART6_Init 0 */
-
-  /* USER CODE END USART6_Init 0 */
-
-  /* USER CODE BEGIN USART6_Init 1 */
-
-  /* USER CODE END USART6_Init 1 */
   huart6.Instance = USART6;
   huart6.Init.BaudRate = 921600;
   huart6.Init.WordLength = UART_WORDLENGTH_8B;
@@ -435,10 +385,15 @@ static void MX_USART6_UART_Init(void)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART6_Init 2 */
+}
 
-  /* USER CODE END USART6_Init 2 */
-
+void uart6_host_rx_data_clear()
+{
+	uint8_t temp;
+	while (__HAL_UART_GET_FLAG(&huart6, UART_FLAG_RXNE)) {
+		temp = (uint8_t)(huart6.Instance->DR & 0x00FF);
+		(void)temp; // Annule le warning "set but not used"
+	}
 }
 
 /**
@@ -449,8 +404,6 @@ static void MX_USART6_UART_Init(void)
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -497,14 +450,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(FPC2530_IRQ_GPIO_Port, &GPIO_InitStruct);
-
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
 }
-
-/* USER CODE BEGIN 4 */
-
-/* USER CODE END 4 */
 
 /**
   * @brief  This function is executed in case of error occurrence.

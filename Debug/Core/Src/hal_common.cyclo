@@ -1,0 +1,4 @@
+../Core/Src/hal_common.c:18:10:hal_check_button_pressed	3
+../Core/Src/hal_common.c:28:6:hal_set_led_status	3
+../Core/Src/hal_common.c:43:6:hal_reset_device	1
+../Core/Src/hal_common.c:50:6:hal_set_if_config	2

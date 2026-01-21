@@ -13,6 +13,7 @@
 
 #include "main.h"
 #include <stdarg.h>
+#include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -63,4 +64,3 @@ void fpc_sample_logf(const char *format, ...)
 
 	va_end(arglist);
 }
-
