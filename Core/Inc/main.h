@@ -64,6 +64,8 @@ void uart6_host_rx_data_clear();
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define USER_BUTTON_Pin GPIO_PIN_13
+#define USER_BUTTON_GPIO_Port GPIOC
 #define FPC2530_RST_N_Pin GPIO_PIN_13
 #define FPC2530_RST_N_GPIO_Port GPIOE
 #define LED3_Pin GPIO_PIN_14

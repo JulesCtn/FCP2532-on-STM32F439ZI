@@ -173,6 +173,7 @@ int main(void)
   fpc_result_t result;
 
   HAL_Init();
+
   SystemClock_Config();
 
   /* Initialize all configured peripherals */
@@ -224,7 +225,6 @@ int main(void)
 	   * | uint32_t **hal_check_button_pressed**(void) | Returns duration in ms the button was pressed |
 	   * | void **hal_set_led_status**(hal_led_status_t status) |  Set LED status |
 	   */
-
 
   }
 }
@@ -406,6 +406,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
@@ -423,6 +424,12 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, FPC2530_IF_CFG_1_Pin|FPC2530_IF_CFG_2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : USER_BUTTON_Pin */
+  GPIO_InitStruct.Pin = USER_BUTTON_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(USER_BUTTON_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : FPC2530_RST_N_Pin */
   GPIO_InitStruct.Pin = FPC2530_RST_N_Pin;
@@ -447,7 +454,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : FPC2530_IRQ_Pin */
   GPIO_InitStruct.Pin = FPC2530_IRQ_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(FPC2530_IRQ_GPIO_Port, &GPIO_InitStruct);
 }
