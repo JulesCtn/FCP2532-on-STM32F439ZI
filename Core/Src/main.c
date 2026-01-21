@@ -186,7 +186,7 @@ int main(void)
   fpc_hal_init();
   fpc_host_sample_init((fpc_cmd_callbacks_t*)&cmd_cb);
 
-  fpc_sample_logf("FPC2532 example app (UART)\n");
+  fpc_sample_logf("FPC2532 example app (UART)\r\n");
 
   // Start by waiting for device status (APP_FW_RDY).
   // All state handling is done in the process_state function.
@@ -206,26 +206,13 @@ int main(void)
 	  if (fpc_hal_data_available()) {
 		  result = fpc_host_sample_handle_rx_data();
 		  if (result != FPC_RESULT_OK && result != FPC_PENDING_OPERATION) {
-			  fpc_sample_logf("Bad incoming data (%d). Wait and try again in some sec",
+			  fpc_sample_logf("Bad incoming data (%d). Wait and try again in some sec\r\n",
 				  result);
 			  HAL_Delay(100);
 			  uart6_host_rx_data_clear();
 		  }
 		  process_state();
 	  }
-
-	  // Fonctions that must be implementede
-	  /*
-	   * | fpc_result_t **fpc_hal_tx**(uint8_t *data, size_t len, uint32_t timeout, int flush) | Send data packet to FPC2532 using selected interface |
-	   * | fpc_result_t **fpc_hal_rx**(uint8_t *data, size_t len, uint32_t timeout) | Receive data packet from FPC2532. If timeout = **0**, the function will wait for data from FPC2532 indefinitely. |
-	   * | int **fpc_hal_data_available**(void) | Check if the FPS Module has its IRQ signal active or data in rx buffer |
-	   */
-	  // Optional functions for implementting user interface in example_app
-	  /*
-	   * | uint32_t **hal_check_button_pressed**(void) | Returns duration in ms the button was pressed |
-	   * | void **hal_set_led_status**(hal_led_status_t status) |  Set LED status |
-	   */
-
   }
 }
 
