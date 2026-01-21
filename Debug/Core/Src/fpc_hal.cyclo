@@ -1,0 +1,6 @@
+../Core/Src/fpc_hal.c:26:14:fpc_hal_init	1
+../Core/Src/fpc_hal.c:32:14:fpc_hal_tx	2
+../Core/Src/fpc_hal.c:38:14:fpc_hal_rx	2
+../Core/Src/fpc_hal.c:44:5:fpc_hal_data_available	1
+../Core/Src/fpc_hal.c:49:14:fpc_hal_wfi	1
+../Core/Src/fpc_hal.c:55:6:fpc_sample_logf	1

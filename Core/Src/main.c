@@ -1,0 +1,539 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2026 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+#include "stm32f4xx.h"
+#include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "hal_common.h"
+
+#include "fpc_api.h"
+#include "fpc_hal.h"
+#include "fpc_host_sample.h"
+
+#define N_FINGERS_TO_ENROLL 2
+
+/* Application states */
+typedef enum {
+    APP_STATE_WAIT_READY = 0,
+    APP_STATE_WAIT_VERSION,
+    APP_STATE_WAIT_LIST_TEMPLATES,
+    APP_STATE_WAIT_ENROLL,
+    APP_STATE_WAIT_IDENTIFY,
+    APP_STATE_WAIT_ABORT,
+    APP_STATE_WAIT_DELETE_TEMPLATES
+} app_state_t;
+
+static int quit = 0;
+/* Current application state */
+static app_state_t app_state = APP_STATE_WAIT_READY;
+/* Set after device ready status is received */
+static int device_ready = 0;
+/* Set after version command response is received */
+static int version_read = 0;
+/* Set after list templates command response is received */
+static int list_templates_done = 0;
+/* Updated at each status event from device */
+static uint16_t device_state = 0;
+/* Set after list templates command response is received */
+static int n_templates_on_device = 0;
+
+/* Number of fingers left to enroll */
+static int n_fingers_to_enroll = N_FINGERS_TO_ENROLL;
+
+static const fpc_cmd_callbacks_t cmd_cb = {
+    .on_error = on_error,
+    .on_status = on_status,
+    .on_version = on_version,
+    .on_enroll = on_enroll,
+    .on_identify = on_identify,
+    .on_list_templates = on_list_templates
+};
+
+// Implémentation facultative des LEDs (selon votre carte Nucleo)
+void hal_set_led_status(hal_led_status_t status) {
+    switch(status) {
+        case HAL_LED_STATUS_MATCH:    // Blue LED
+            HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
+            break;
+        case HAL_LED_STATUS_ERROR:    // Red LED
+            HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+            break;
+        default:
+        	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
+        	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
+    }
+}
+
+static void process_state(void)
+{
+    app_state_t next_state = app_state;
+
+    switch(app_state) {
+        case APP_STATE_WAIT_READY:
+            if (device_ready) {
+                next_state = APP_STATE_WAIT_VERSION;
+                fpc_cmd_version_request();
+            }
+            break;
+        case APP_STATE_WAIT_VERSION:
+            if (version_read) {
+                next_state = APP_STATE_WAIT_LIST_TEMPLATES;
+                fpc_cmd_list_templates_request();
+            }
+            break;
+        case APP_STATE_WAIT_LIST_TEMPLATES:
+            if (list_templates_done) {
+                if (n_templates_on_device < N_FINGERS_TO_ENROLL) {
+                    fpc_id_type_t id_type = {ID_TYPE_GENERATE_NEW, 0};
+                    n_fingers_to_enroll = N_FINGERS_TO_ENROLL - n_templates_on_device;
+                    fpc_sample_logf("\nStarting enroll %d fingers\n", n_fingers_to_enroll);
+                    next_state = APP_STATE_WAIT_ENROLL;
+                    fpc_cmd_enroll_request(&id_type);
+                }
+                else {
+                    fpc_id_type_t id_type = {ID_TYPE_ALL, 0};
+                    fpc_sample_logf("\nStarting identify\n");
+                    next_state = APP_STATE_WAIT_IDENTIFY;
+                    fpc_cmd_identify_request(&id_type, 0);
+                }
+            }
+            break;
+        case APP_STATE_WAIT_ENROLL:
+            if ((device_state & STATE_ENROLL) == 0) {
+            	fpc_sample_logf("\nEnroll one finger done.\n");
+                n_fingers_to_enroll--;
+                if (n_fingers_to_enroll > 0) {
+                    fpc_id_type_t id_type = {ID_TYPE_GENERATE_NEW, 0};
+                    fpc_sample_logf("\nStarting enroll\n");
+                    fpc_cmd_enroll_request(&id_type);
+                } else {
+                    fpc_id_type_t id_type = {ID_TYPE_ALL, 0};
+                    fpc_sample_logf("\nStarting identify\n");
+                    next_state = APP_STATE_WAIT_IDENTIFY;
+                    fpc_cmd_identify_request(&id_type, 0);
+                }
+            }
+            break;
+        case APP_STATE_WAIT_IDENTIFY:
+            if ((device_state & STATE_IDENTIFY) == 0) {
+                fpc_id_type_t id_type = {ID_TYPE_ALL, 0};
+                HAL_Delay(100);
+                fpc_cmd_identify_request(&id_type, 0);
+            }
+            break;
+        case APP_STATE_WAIT_ABORT:
+            if ((device_state & (STATE_ENROLL | STATE_IDENTIFY)) == 0) {
+                fpc_id_type_t id_type = {ID_TYPE_ALL, 0};
+                fpc_sample_logf("\nDeleting templates.\n");
+                next_state = APP_STATE_WAIT_DELETE_TEMPLATES;
+                fpc_cmd_delete_template_request(&id_type);
+            }
+            break;
+        // Will run after next status event is received in response to delete template request.
+        case APP_STATE_WAIT_DELETE_TEMPLATES:
+        {
+            fpc_id_type_t id_type = {ID_TYPE_GENERATE_NEW, 0};
+            n_fingers_to_enroll = N_FINGERS_TO_ENROLL;
+            hal_set_led_status(HAL_LED_STATUS_WAITTOUCH);
+            fpc_sample_logf("\nStarting enroll.\n");
+            next_state = APP_STATE_WAIT_ENROLL;
+            fpc_cmd_enroll_request(&id_type);
+            break;
+        }
+        default:
+            break;
+    }
+
+    if (next_state != app_state) {
+    	fpc_sample_logf("State transition %d -> %d\n", app_state, next_state);
+        app_state = next_state;
+    }
+}
+
+/* Private variables ---------------------------------------------------------*/
+SPI_HandleTypeDef hspi1;
+
+UART_HandleTypeDef huart3;
+UART_HandleTypeDef huart6;
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_SPI1_Init(void);
+static void MX_USART3_UART_Init(void);
+static void MX_USART6_UART_Init(void);
+
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
+  fpc_result_t result;
+
+  HAL_Init();
+  SystemClock_Config();
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_SPI1_Init();
+  MX_USART3_UART_Init();
+  MX_USART6_UART_Init();
+
+  /* Initialisation SDK FPC */
+  fpc_hal_init();
+  fpc_host_sample_init((fpc_cmd_callbacks_t*)&cmd_cb);
+
+  fpc_sample_logf("FPC2532 example app (UART)\n");
+
+  // Start by waiting for device status (APP_FW_RDY).
+  // All state handling is done in the process_state function.
+
+  // Run through supported commands
+  while (1)
+  {
+	  // Wait for device IRQ or button
+	  fpc_hal_wfi();
+
+	  if (hal_check_button_pressed() > 200) {
+		  fpc_sample_logf("Button pressed");
+		  app_state = APP_STATE_WAIT_ABORT;
+		  fpc_cmd_abort();
+	  }
+
+	  if (fpc_hal_data_available()) {
+		  result = fpc_host_sample_handle_rx_data();
+		  if (result != FPC_RESULT_OK && result != FPC_PENDING_OPERATION) {
+			  fpc_sample_logf("Bad incoming data (%d). Wait and try again in some sec",
+				  result);
+			  fpc_hal_delay_ms(100);
+			  uart_host_rx_data_clear();
+		  }
+		  process_state();
+	  }
+
+	  // Fonctions that must be implementede
+	  /*
+	   * | fpc_result_t **fpc_hal_tx**(uint8_t *data, size_t len, uint32_t timeout, int flush) | Send data packet to FPC2532 using selected interface |
+	   * | fpc_result_t **fpc_hal_rx**(uint8_t *data, size_t len, uint32_t timeout) | Receive data packet from FPC2532. If timeout = **0**, the function will wait for data from FPC2532 indefinitely. |
+	   * | int **fpc_hal_data_available**(void) | Check if the FPS Module has its IRQ signal active or data in rx buffer |
+	   */
+	  // Optional functions for implementting user interface in example_app
+	  /*
+	   * | uint32_t **hal_check_button_pressed**(void) | Returns duration in ms the button was pressed |
+	   * | void **hal_set_led_status**(hal_led_status_t status) |  Set LED status |
+	   */
+
+
+  }
+}
+
+/* Command callbacks */
+void on_error(uint16_t error)
+{
+    hal_set_led_status(HAL_LED_STATUS_ERROR);
+    fpc_sample_logf("Got error %d.\n", error);
+    quit = 1;
+}
+
+void on_status(uint16_t event, uint16_t state)
+{
+    if (state & STATE_APP_FW_READY) {
+        device_ready = 1;
+    }
+    device_state = state;
+}
+
+void on_version(char* version)
+{
+	fpc_sample_logf("Got version: %s", version);
+    version_read = 1;
+}
+
+void on_enroll(uint8_t feedback, uint8_t samples_remaining)
+{
+    extern char *get_enroll_feedback_str_(uint8_t feedback);
+    fpc_sample_logf("Enroll samples remaining: %d, feedback: %s (%d)", samples_remaining,
+        get_enroll_feedback_str_(feedback), feedback);
+}
+
+void on_identify(int is_match, uint16_t id)
+{
+    if (is_match) {
+        hal_set_led_status(HAL_LED_STATUS_MATCH);
+        fpc_sample_logf("Identify match on id %d", id);
+    }
+    else {
+        hal_set_led_status(HAL_LED_STATUS_NO_MATCH);
+        fpc_sample_logf("Identify no match");
+    }
+}
+
+void on_list_templates(int num_templates, uint16_t *template_ids)
+{
+	fpc_sample_logf("Found %d template(s) on device", num_templates);
+
+    list_templates_done = 1;
+    n_templates_on_device = num_templates;
+}
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  /** Configure the main internal regulator output voltage
+  */
+  __HAL_RCC_PWR_CLK_ENABLE();
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART3_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART3_Init 0 */
+
+  /* USER CODE END USART3_Init 0 */
+
+  /* USER CODE BEGIN USART3_Init 1 */
+
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 115200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART3_Init 2 */
+
+  /* USER CODE END USART3_Init 2 */
+
+}
+
+/**
+  * @brief USART6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART6_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART6_Init 0 */
+
+  /* USER CODE END USART6_Init 0 */
+
+  /* USER CODE BEGIN USART6_Init 1 */
+
+  /* USER CODE END USART6_Init 1 */
+  huart6.Instance = USART6;
+  huart6.Init.BaudRate = 921600;
+  huart6.Init.WordLength = UART_WORDLENGTH_8B;
+  huart6.Init.StopBits = UART_STOPBITS_1;
+  huart6.Init.Parity = UART_PARITY_NONE;
+  huart6.Init.Mode = UART_MODE_TX_RX;
+  huart6.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart6.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART6_Init 2 */
+
+  /* USER CODE END USART6_Init 2 */
+
+}
+
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(FPC2530_RST_N_GPIO_Port, FPC2530_RST_N_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, LED3_Pin|LED2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(FPC2530_CS_N_GPIO_Port, FPC2530_CS_N_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, FPC2530_IF_CFG_1_Pin|FPC2530_IF_CFG_2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : FPC2530_RST_N_Pin */
+  GPIO_InitStruct.Pin = FPC2530_RST_N_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(FPC2530_RST_N_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : LED3_Pin LED2_Pin */
+  GPIO_InitStruct.Pin = LED3_Pin|LED2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : FPC2530_CS_N_Pin FPC2530_IF_CFG_1_Pin FPC2530_IF_CFG_2_Pin */
+  GPIO_InitStruct.Pin = FPC2530_CS_N_Pin|FPC2530_IF_CFG_1_Pin|FPC2530_IF_CFG_2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : FPC2530_IRQ_Pin */
+  GPIO_InitStruct.Pin = FPC2530_IRQ_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(FPC2530_IRQ_GPIO_Port, &GPIO_InitStruct);
+
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
+}
+
+/* USER CODE BEGIN 4 */
+
+/* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
+  {
+  }
+  /* USER CODE END Error_Handler_Debug */
+}
+
+#ifdef  USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */
