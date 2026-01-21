@@ -66,6 +66,7 @@ void uart6_host_rx_data_clear();
 /* Private defines -----------------------------------------------------------*/
 #define USER_BUTTON_Pin GPIO_PIN_13
 #define USER_BUTTON_GPIO_Port GPIOC
+#define USER_BUTTON_EXTI_IRQn EXTI15_10_IRQn
 #define FPC2530_RST_N_Pin GPIO_PIN_13
 #define FPC2530_RST_N_GPIO_Port GPIOE
 #define LED3_Pin GPIO_PIN_14
@@ -74,6 +75,7 @@ void uart6_host_rx_data_clear();
 #define FPC2530_CS_N_GPIO_Port GPIOD
 #define FPC2530_IRQ_Pin GPIO_PIN_2
 #define FPC2530_IRQ_GPIO_Port GPIOD
+#define FPC2530_IRQ_EXTI_IRQn EXTI2_IRQn
 #define FPC2530_IF_CFG_1_Pin GPIO_PIN_4
 #define FPC2530_IF_CFG_1_GPIO_Port GPIOD
 #define FPC2530_IF_CFG_2_Pin GPIO_PIN_5
