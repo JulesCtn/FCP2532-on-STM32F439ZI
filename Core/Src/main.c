@@ -185,6 +185,8 @@ int main(void)
   /* Initialisation SDK FPC */
   fpc_hal_init();
   fpc_host_sample_init((fpc_cmd_callbacks_t*)&cmd_cb);
+  hal_reset_device();
+  HAL_GPIO_WritePin(FPC2530_CS_N_GPIO_Port, FPC2530_CS_N_Pin, GPIO_PIN_RESET);
 
   fpc_sample_logf("FPC2532 example app (UART)\r\n");
 
@@ -206,8 +208,7 @@ int main(void)
 	  if (fpc_hal_data_available()) {
 		  result = fpc_host_sample_handle_rx_data();
 		  if (result != FPC_RESULT_OK && result != FPC_PENDING_OPERATION) {
-			  fpc_sample_logf("Bad incoming data (%d). Wait and try again in some sec\r\n",
-				  result);
+			  fpc_sample_logf("Bad incoming data (%d). Wait and try again in some sec\r\n", result);
 			  HAL_Delay(100);
 			  uart6_host_rx_data_clear();
 		  }

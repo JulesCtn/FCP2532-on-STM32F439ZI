@@ -26,7 +26,7 @@ extern UART_HandleTypeDef huart3; // Debug channel
 
 fpc_result_t fpc_hal_init(void)
 {
-    //hal_set_if_config(HAL_IF_CONFIG_UART);
+	hal_set_if_config(HAL_IF_CONFIG_UART);
     return FPC_RESULT_OK;
 }
 
