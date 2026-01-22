@@ -396,22 +396,23 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(FPC2530_RST_N_GPIO_Port, FPC2530_RST_N_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(FPC2530_IF_CFG_1_GPIO_Port, FPC2530_IF_CFG_1_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOE, FPC2530_IF_CFG_2_Pin|FPC2530_RST_N_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LED3_Pin|LED2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(FPC2530_CS_N_GPIO_Port, FPC2530_CS_N_Pin, GPIO_PIN_SET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, FPC2530_IF_CFG_1_Pin|FPC2530_IF_CFG_2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(FPC2530_CS_N_GPIO_Port, FPC2530_CS_N_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : USER_BUTTON_Pin */
   GPIO_InitStruct.Pin = USER_BUTTON_Pin;
@@ -419,12 +420,25 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(USER_BUTTON_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : FPC2530_RST_N_Pin */
-  GPIO_InitStruct.Pin = FPC2530_RST_N_Pin;
+  /*Configure GPIO pin : FPC2530_IF_CFG_1_Pin */
+  GPIO_InitStruct.Pin = FPC2530_IF_CFG_1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(FPC2530_RST_N_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(FPC2530_IF_CFG_1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : FPC2530_IRQ_Pin */
+  GPIO_InitStruct.Pin = FPC2530_IRQ_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(FPC2530_IRQ_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : FPC2530_IF_CFG_2_Pin FPC2530_RST_N_Pin */
+  GPIO_InitStruct.Pin = FPC2530_IF_CFG_2_Pin|FPC2530_RST_N_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LED3_Pin LED2_Pin */
   GPIO_InitStruct.Pin = LED3_Pin|LED2_Pin;
@@ -433,27 +447,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : FPC2530_CS_N_Pin FPC2530_IF_CFG_1_Pin FPC2530_IF_CFG_2_Pin */
-  GPIO_InitStruct.Pin = FPC2530_CS_N_Pin|FPC2530_IF_CFG_1_Pin|FPC2530_IF_CFG_2_Pin;
+  /*Configure GPIO pin : FPC2530_CS_N_Pin */
+  GPIO_InitStruct.Pin = FPC2530_CS_N_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : FPC2530_IRQ_Pin */
-  GPIO_InitStruct.Pin = FPC2530_IRQ_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(FPC2530_IRQ_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(FPC2530_CS_N_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
-
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
-
 
 /**
   * @brief  This function is executed in case of error occurrence.

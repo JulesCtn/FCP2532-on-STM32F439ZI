@@ -12,4 +12,4 @@
 ../Core/Src/main.c:362:13:MX_USART6_UART_Init	2
 ../Core/Src/main.c:378:6:uart6_host_rx_data_clear	2
 ../Core/Src/main.c:392:13:MX_GPIO_Init	1
-../Core/Src/main.c:462:6:Error_Handler	1
+../Core/Src/main.c:466:6:Error_Handler	1
