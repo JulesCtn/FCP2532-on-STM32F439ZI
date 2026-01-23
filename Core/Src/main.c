@@ -187,6 +187,7 @@ int main(void)
   fpc_host_sample_init((fpc_cmd_callbacks_t*)&cmd_cb);
   hal_reset_device();
   HAL_GPIO_WritePin(FPC2530_CS_N_GPIO_Port, FPC2530_CS_N_Pin, GPIO_PIN_RESET);
+  //uart6_host_rx_data_clear();
   HAL_Delay(200);
 
   fpc_sample_logf("FPC2532 example app (UART)\r\n");

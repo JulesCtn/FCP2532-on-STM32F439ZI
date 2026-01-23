@@ -849,6 +849,8 @@ fpc_result_t fpc_host_sample_handle_rx_data(void)
     /* Step 1: Read Frame Header */
     result = fpc_hal_rx((uint8_t*)&frame_hdr, sizeof(fpc_frame_hdr_t), TIMEOUT);
 
+    fpc_sample_logf("First byte received: 0x%02X\r\n", ((uint8_t*)&frame_hdr)[0]); // ligne de debug
+
     if (result == FPC_RESULT_OK) {
         /* Sanity Check */
         if (frame_hdr.version != FPC_FRAME_PROTOCOL_VERSION ||

@@ -29,6 +29,6 @@
 ../Core/Src/fpc_host_sample.c:753:21:parse_cmd_bist	6
 ../Core/Src/fpc_host_sample.c:784:21:parse_cmd	18
 ../Core/Src/fpc_host_sample.c:843:14:fpc_host_sample_handle_rx_data	12
-../Core/Src/fpc_host_sample.c:892:14:fpc_host_sample_init	2
-../Core/Src/fpc_host_sample.c:905:14:fpc_host_sample_run	5
-../Core/Src/fpc_host_sample.c:929:6:fpc_host_sample_stop	1
+../Core/Src/fpc_host_sample.c:894:14:fpc_host_sample_init	2
+../Core/Src/fpc_host_sample.c:907:14:fpc_host_sample_run	5
+../Core/Src/fpc_host_sample.c:931:6:fpc_host_sample_stop	1
