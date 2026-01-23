@@ -410,7 +410,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOG_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(FPC2530_IF_CFG_1_GPIO_Port, FPC2530_IF_CFG_1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(FPC2530_IF_CFG_1_GPIO_Port, FPC2530_IF_CFG_1_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOE, FPC2530_IF_CFG_2_Pin|FPC2530_RST_N_Pin, GPIO_PIN_RESET);
