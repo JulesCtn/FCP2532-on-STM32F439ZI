@@ -10,7 +10,7 @@
 #include "hal_common.h"
 #include <stdbool.h>
 
-extern volatile bool fpc2530_irq_active;
+volatile bool fpc2530_irq_active;
 
 static uint32_t button_down_start = 0;
 static uint32_t button_down_time = 0;
@@ -23,7 +23,24 @@ uint32_t hal_check_button_pressed(void)
 		button_down_time = 0;
 	}
 	return button_down ? 0 : button_time;
+}
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    if (GPIO_Pin == USER_BUTTON_Pin) {
+        if (HAL_GPIO_ReadPin(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin) == GPIO_PIN_SET) {
+            button_down_time = HAL_GetTick() - button_down_start;
+            button_down = false;
+        } else {
+            button_down_start = HAL_GetTick();
+            button_down = true;
+        }
+    }
+    else if (GPIO_Pin == FPC2530_IRQ_Pin) {
+        if (HAL_GPIO_ReadPin(FPC2530_IRQ_GPIO_Port, FPC2530_IRQ_Pin) == GPIO_PIN_SET) {
+            fpc2530_irq_active = true;
+        }
+    }
 }
 
 void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)

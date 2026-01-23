@@ -87,13 +87,13 @@ static void process_state(void)
                 if (n_templates_on_device < N_FINGERS_TO_ENROLL) {
                     fpc_id_type_t id_type = {ID_TYPE_GENERATE_NEW, 0};
                     n_fingers_to_enroll = N_FINGERS_TO_ENROLL - n_templates_on_device;
-                    fpc_sample_logf("\nStarting enroll %d fingers\n", n_fingers_to_enroll);
+                    fpc_sample_logf("\nStarting enroll %d fingers\r\n", n_fingers_to_enroll);
                     next_state = APP_STATE_WAIT_ENROLL;
                     fpc_cmd_enroll_request(&id_type);
                 }
                 else {
                     fpc_id_type_t id_type = {ID_TYPE_ALL, 0};
-                    fpc_sample_logf("\nStarting identify\n");
+                    fpc_sample_logf("\nStarting identify\r\n");
                     next_state = APP_STATE_WAIT_IDENTIFY;
                     fpc_cmd_identify_request(&id_type, 0);
                 }
@@ -101,15 +101,15 @@ static void process_state(void)
             break;
         case APP_STATE_WAIT_ENROLL:
             if ((device_state & STATE_ENROLL) == 0) {
-            	fpc_sample_logf("\nEnroll one finger done.\n");
+            	fpc_sample_logf("\nEnroll one finger done.\r\n");
                 n_fingers_to_enroll--;
                 if (n_fingers_to_enroll > 0) {
                     fpc_id_type_t id_type = {ID_TYPE_GENERATE_NEW, 0};
-                    fpc_sample_logf("\nStarting enroll\n");
+                    fpc_sample_logf("\nStarting enroll\r\n");
                     fpc_cmd_enroll_request(&id_type);
                 } else {
                     fpc_id_type_t id_type = {ID_TYPE_ALL, 0};
-                    fpc_sample_logf("\nStarting identify\n");
+                    fpc_sample_logf("\nStarting identify\r\n");
                     next_state = APP_STATE_WAIT_IDENTIFY;
                     fpc_cmd_identify_request(&id_type, 0);
                 }
@@ -125,7 +125,7 @@ static void process_state(void)
         case APP_STATE_WAIT_ABORT:
             if ((device_state & (STATE_ENROLL | STATE_IDENTIFY)) == 0) {
                 fpc_id_type_t id_type = {ID_TYPE_ALL, 0};
-                fpc_sample_logf("\nDeleting templates.\n");
+                fpc_sample_logf("\nDeleting templates.\r\n");
                 next_state = APP_STATE_WAIT_DELETE_TEMPLATES;
                 fpc_cmd_delete_template_request(&id_type);
             }
@@ -136,7 +136,7 @@ static void process_state(void)
             fpc_id_type_t id_type = {ID_TYPE_GENERATE_NEW, 0};
             n_fingers_to_enroll = N_FINGERS_TO_ENROLL;
             hal_set_led_status(HAL_LED_STATUS_WAITTOUCH);
-            fpc_sample_logf("\nStarting enroll.\n");
+            fpc_sample_logf("\nStarting enroll.\r\n");
             next_state = APP_STATE_WAIT_ENROLL;
             fpc_cmd_enroll_request(&id_type);
             break;
@@ -146,7 +146,7 @@ static void process_state(void)
     }
 
     if (next_state != app_state) {
-    	fpc_sample_logf("State transition %d -> %d\n", app_state, next_state);
+    	fpc_sample_logf("State transition %d -> %d\r\n", app_state, next_state);
         app_state = next_state;
     }
 }
@@ -171,9 +171,10 @@ static void MX_USART6_UART_Init(void);
 int main(void)
 {
   fpc_result_t result;
+  fpc_host_sample_init((fpc_cmd_callbacks_t*)&cmd_cb);
+  fpc_hal_init();
 
   HAL_Init();
-
   SystemClock_Config();
 
   /* Initialize all configured peripherals */
@@ -182,15 +183,9 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
 
-  /* Initialisation SDK FPC */
-  fpc_hal_init();
-  fpc_host_sample_init((fpc_cmd_callbacks_t*)&cmd_cb);
   hal_reset_device();
-  HAL_GPIO_WritePin(FPC2530_CS_N_GPIO_Port, FPC2530_CS_N_Pin, GPIO_PIN_RESET);
-  //uart6_host_rx_data_clear();
+  fpc_sample_logf("\nFPC2532 example app (UART)\r\n\n");
   HAL_Delay(200);
-
-  fpc_sample_logf("FPC2532 example app (UART)\r\n");
 
   // Start by waiting for device status (APP_FW_RDY).
   // All state handling is done in the process_state function.
@@ -202,7 +197,7 @@ int main(void)
 	  fpc_hal_wfi();
 
 	  if (hal_check_button_pressed() > 200) {
-		  fpc_sample_logf("Button pressed\r\n");
+		  fpc_sample_logf("\nButton pressed\r\n");
 		  app_state = APP_STATE_WAIT_ABORT;
 		  fpc_cmd_abort();
 	  }

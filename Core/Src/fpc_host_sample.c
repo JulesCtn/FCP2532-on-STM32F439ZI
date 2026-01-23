@@ -172,7 +172,7 @@ fpc_result_t fpc_cmd_version_request(void)
     cmd.cmd_id = CMD_VERSION;
     cmd.type = FPC_FRAME_TYPE_CMD_REQUEST;
 
-    fpc_sample_logf(">>> CMD_VERSION");
+    fpc_sample_logf(">>> CMD_VERSION	");
     result = fpc_send_request(&cmd, sizeof(fpc_cmd_hdr_t));
 
     return result;
@@ -196,7 +196,7 @@ fpc_result_t fpc_cmd_enroll_request(fpc_id_type_t *id)
         cmd_req.tpl_id.type = id->type;
         cmd_req.tpl_id.id = id->id;
 
-        fpc_sample_logf(">>> CMD_ENROLL (id.type=%s, id=%d)",
+        fpc_sample_logf(">>> CMD_ENROLL (id.type=%s, id=%d)\r\n",
             get_id_type_str_(id->type), id->id);
 
         result = fpc_send_request(&cmd_req.cmd, sizeof(fpc_cmd_enroll_request_t));
@@ -283,7 +283,7 @@ fpc_result_t fpc_cmd_delete_template_request(fpc_id_type_t *id)
         cmd_req.tpl_id.type = id->type;
         cmd_req.tpl_id.id = id->id;
 
-        fpc_sample_logf(">>> CMD_DELETE_TEMPLATE (id.type=%s, id=%d)",
+        fpc_sample_logf(">>> CMD_DELETE_TEMPLATE (id.type=%s, id=%d)\r\n",
             get_id_type_str_(id->type), id->id);
 
         result = fpc_send_request(&cmd_req.cmd, sizeof(fpc_cmd_template_delete_request_t));
@@ -849,7 +849,9 @@ fpc_result_t fpc_host_sample_handle_rx_data(void)
     /* Step 1: Read Frame Header */
     result = fpc_hal_rx((uint8_t*)&frame_hdr, sizeof(fpc_frame_hdr_t), TIMEOUT);
 
-    fpc_sample_logf("First byte received: 0x%02X\r\n", ((uint8_t*)&frame_hdr)[0]); // ligne de debug
+    fpc_sample_logf("HDR Rx: %02X %02X %02X %02X... Result: %d\r\n",
+                    ((uint8_t*)&frame_hdr)[0], ((uint8_t*)&frame_hdr)[1],
+                    ((uint8_t*)&frame_hdr)[2], ((uint8_t*)&frame_hdr)[3], result); // lignes de debug
 
     if (result == FPC_RESULT_OK) {
         /* Sanity Check */
@@ -857,7 +859,7 @@ fpc_result_t fpc_host_sample_handle_rx_data(void)
             ((frame_hdr.flags & FPC_FRAME_FLAG_SENDER_FW_APP) == 0) ||
             (frame_hdr.type != FPC_FRAME_TYPE_CMD_RESPONSE &&
              frame_hdr.type != FPC_FRAME_TYPE_CMD_EVENT)) {
-            fpc_sample_logf("Sanity check of rx data failed\r\n");
+            fpc_sample_logf("Sanity check of rx data failed\n");
             result = FPC_RESULT_IO_BAD_DATA;
         }
     }
@@ -865,7 +867,7 @@ fpc_result_t fpc_host_sample_handle_rx_data(void)
     if (result == FPC_RESULT_OK) {
         frame_payload = malloc(frame_hdr.payload_size);
         if (!frame_payload) {
-            fpc_sample_logf("Failed to malloc\r\n");
+            fpc_sample_logf("Failed to malloc\n");
             result = FPC_RESULT_OUT_OF_MEMORY;
         }
     }
