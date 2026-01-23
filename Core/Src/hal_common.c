@@ -51,6 +51,16 @@ void hal_set_led_status(hal_led_status_t status)
 	        case HAL_LED_STATUS_MATCH:    // Blue LED
 	            HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
 	            break;
+	        case HAL_LED_STATUS_NO_MATCH:
+	        	HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
+	        	HAL_Delay(1000);
+	        	HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
+	        	break;
+	        case HAL_LED_STATUS_WAITTOUCH:
+	        	HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
+				HAL_Delay(1000);
+				HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
+				break;
 	        case HAL_LED_STATUS_ERROR:    // Red LED
 	            HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
 	            break;

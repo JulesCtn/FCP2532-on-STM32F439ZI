@@ -187,6 +187,7 @@ int main(void)
   fpc_host_sample_init((fpc_cmd_callbacks_t*)&cmd_cb);
   hal_reset_device();
   HAL_GPIO_WritePin(FPC2530_CS_N_GPIO_Port, FPC2530_CS_N_Pin, GPIO_PIN_RESET);
+  HAL_Delay(200);
 
   fpc_sample_logf("FPC2532 example app (UART)\r\n");
 
@@ -200,7 +201,7 @@ int main(void)
 	  fpc_hal_wfi();
 
 	  if (hal_check_button_pressed() > 200) {
-		  fpc_sample_logf("Button pressed");
+		  fpc_sample_logf("Button pressed\r\n");
 		  app_state = APP_STATE_WAIT_ABORT;
 		  fpc_cmd_abort();
 	  }
@@ -221,7 +222,7 @@ int main(void)
 void on_error(uint16_t error)
 {
     hal_set_led_status(HAL_LED_STATUS_ERROR);
-    fpc_sample_logf("Got error %d.\n", error);
+    fpc_sample_logf("Got error %d.\r\n", error);
     quit = 1;
 }
 
@@ -235,14 +236,14 @@ void on_status(uint16_t event, uint16_t state)
 
 void on_version(char* version)
 {
-	fpc_sample_logf("Got version: %s", version);
+	fpc_sample_logf("Got version: %s\r\n", version);
     version_read = 1;
 }
 
 void on_enroll(uint8_t feedback, uint8_t samples_remaining)
 {
     extern char *get_enroll_feedback_str_(uint8_t feedback);
-    fpc_sample_logf("Enroll samples remaining: %d, feedback: %s (%d)", samples_remaining,
+    fpc_sample_logf("Enroll samples remaining: %d, feedback: %s (%d)\r\n", samples_remaining,
         get_enroll_feedback_str_(feedback), feedback);
 }
 
@@ -250,17 +251,17 @@ void on_identify(int is_match, uint16_t id)
 {
     if (is_match) {
         hal_set_led_status(HAL_LED_STATUS_MATCH);
-        fpc_sample_logf("Identify match on id %d", id);
+        fpc_sample_logf("Identify match on id %d\r\n", id);
     }
     else {
         hal_set_led_status(HAL_LED_STATUS_NO_MATCH);
-        fpc_sample_logf("Identify no match");
+        fpc_sample_logf("Identify no match\r\n");
     }
 }
 
 void on_list_templates(int num_templates, uint16_t *template_ids)
 {
-	fpc_sample_logf("Found %d template(s) on device", num_templates);
+	fpc_sample_logf("Found %d template(s) on device\r\n", num_templates);
 
     list_templates_done = 1;
     n_templates_on_device = num_templates;
@@ -412,7 +413,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, LED3_Pin|LED2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(FPC2530_CS_N_GPIO_Port, FPC2530_CS_N_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(FPC2530_CS_N_GPIO_Port, FPC2530_CS_N_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : USER_BUTTON_Pin */
   GPIO_InitStruct.Pin = USER_BUTTON_Pin;

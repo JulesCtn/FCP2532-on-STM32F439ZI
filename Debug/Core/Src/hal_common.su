@@ -2,5 +2,5 @@
 ../Core/Src/hal_common.c:29:6:HAL_GPIO_EXTI_Rising_Callback	16	static
 ../Core/Src/hal_common.c:40:6:HAL_GPIO_EXTI_Falling_Callback	16	static
 ../Core/Src/hal_common.c:48:6:hal_set_led_status	16	static
-../Core/Src/hal_common.c:63:6:hal_reset_device	8	static
-../Core/Src/hal_common.c:70:6:hal_set_if_config	16	static
+../Core/Src/hal_common.c:73:6:hal_reset_device	8	static
+../Core/Src/hal_common.c:80:6:hal_set_if_config	16	static
