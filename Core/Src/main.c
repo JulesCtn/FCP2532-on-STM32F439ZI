@@ -26,7 +26,11 @@
 #include "fpc_hal.h"
 #include "fpc_host_sample.h"
 
+#include <stdbool.h>
+#include <string.h>
+
 #define N_FINGERS_TO_ENROLL 2
+#define DMA_BUF_SIZE   128
 
 /* Application states */
 typedef enum {
