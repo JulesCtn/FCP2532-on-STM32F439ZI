@@ -16,6 +16,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "hal_common.h"
 #include "fpc_api.h"
@@ -24,8 +25,29 @@
 extern UART_HandleTypeDef huart6; // Capteur FPC
 extern UART_HandleTypeDef huart3; // Debug channel
 
+#define DMA_BUF_SIZE   128
+#define DMA_TIMEOUT_MS 2
+
+static uint8_t uart_rx_fifo[DMA_BUF_SIZE];
+
+extern volatile bool fpc2530_irq_active;
+
 fpc_result_t fpc_hal_init(void)
 {
+	HAL_StatusTypeDef status;
+
+	/* Clear IDLE Flag */
+	__HAL_UART_CLEAR_FLAG(&huart6, UART_IT_IDLE);
+	/* Enable UART IDLE interrupt */
+	__HAL_UART_ENABLE_IT(&huart6, UART_IT_IDLE);
+
+	/* Start UART RX */
+	status = HAL_UART_Receive_DMA(&huart6, uart_rx_fifo, DMA_BUF_SIZE);
+
+	if (status != HAL_OK) {
+		fpc_sample_logf("DMA RX Start Failed! Status: %d\r\n", status);
+	}
+
 	hal_set_if_config(HAL_IF_CONFIG_UART);
     return FPC_RESULT_OK;
 }
@@ -68,3 +90,13 @@ void fpc_sample_logf(const char *format, ...)
 
 	va_end(arglist);
 }
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if (huart->Instance == USART6) {
+		uint8_t received_byte = uart_rx_fifo[0];
+
+		fpc_sample_logf("DMA Received: %d\r\n", received_byte);
+	}
+}
+
