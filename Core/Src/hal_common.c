@@ -43,7 +43,25 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     }
 }
 
-void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
+/*void host_uart_irq_handler(void)
+{
+    // UART IDLE Interrupt
+    if ((huart6.Instance->SR & USART_SR_IDLE) != RESET) {
+        huart6.Instance->CR1 = UART_CLEAR_IDLEF;
+        if (ignore_first_idle_irq) {
+            ignore_first_idle_irq = false;
+        }
+        else {
+            dma_uart_rx.flag = 1;
+            dma_uart_rx.idle_irq_count++;
+            if(uart_host_hdma_rx.XferCpltCallback != NULL) {
+                uart_host_hdma_rx.XferCpltCallback(&uart_host_hdma_rx);
+            }
+        }
+    }
+}*/
+
+/*void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
 {
     if (GPIO_Pin == USER_BUTTON_Pin) {
         button_down_time = HAL_GetTick() - button_down_start;
@@ -60,7 +78,7 @@ void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
         button_down_start = HAL_GetTick();
         button_down = true;
     }
-}
+}*/
 
 void hal_set_led_status(hal_led_status_t status)
 {

@@ -51,13 +51,6 @@ extern "C" {
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
-void on_error(uint16_t error);
-void on_status(uint16_t event, uint16_t state);
-void on_version(char* version);
-void on_enroll(uint8_t feedback, uint8_t samples_remaining);
-void on_identify(int is_match, uint16_t id);
-void on_list_templates(int num_templates, uint16_t *template_ids);
-void uart6_host_rx_data_clear();
 
 /* USER CODE BEGIN EFP */
 
