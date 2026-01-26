@@ -156,10 +156,12 @@ SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart6;
+DMA_HandleTypeDef hdma_usart6_rx;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USART6_UART_Init(void);
@@ -179,6 +181,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_SPI1_Init();
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
@@ -193,71 +196,71 @@ int main(void)
   // Run through supported commands
   while (1)
   {
-	  // Wait for device IRQ or button
-	  fpc_hal_wfi();
+	// Wait for device IRQ or button
+	fpc_hal_wfi();
 
-	  if (hal_check_button_pressed() > 200) {
-		  fpc_sample_logf("\nButton pressed\r\n");
-		  app_state = APP_STATE_WAIT_ABORT;
-		  fpc_cmd_abort();
-	  }
+	if (hal_check_button_pressed() > 200) {
+		fpc_sample_logf("\nButton pressed\r\n");
+		app_state = APP_STATE_WAIT_ABORT;
+		fpc_cmd_abort();
+	}
 
-	  if (fpc_hal_data_available()) {
-		  result = fpc_host_sample_handle_rx_data();
-		  if (result != FPC_RESULT_OK && result != FPC_PENDING_OPERATION) {
-			  fpc_sample_logf("Bad incoming data (%d). Wait and try again in some sec\r\n", result);
-			  HAL_Delay(100);
-			  uart6_host_rx_data_clear();
-		  }
-		  process_state();
-	  }
+	if (fpc_hal_data_available()) {
+		result = fpc_host_sample_handle_rx_data();
+		if (result != FPC_RESULT_OK && result != FPC_PENDING_OPERATION) {
+			fpc_sample_logf("Bad incoming data (%d). Wait and try again in some sec\r\n", result);
+			HAL_Delay(100);
+			uart6_host_rx_data_clear();
+		}
+		process_state();
+	}
   }
 }
 
 /* Command callbacks */
 void on_error(uint16_t error)
 {
-    hal_set_led_status(HAL_LED_STATUS_ERROR);
-    fpc_sample_logf("Got error %d.\r\n", error);
-    quit = 1;
+	hal_set_led_status(HAL_LED_STATUS_ERROR);
+	fpc_sample_logf("Got error %d.\r\n", error);
+	quit = 1;
 }
 
 void on_status(uint16_t event, uint16_t state)
 {
-    if (state & STATE_APP_FW_READY) {
-        device_ready = 1;
-    }
-    device_state = state;
+	if (state & STATE_APP_FW_READY) {
+		device_ready = 1;
+	}
+	device_state = state;
 }
 
 void on_version(char* version)
 {
 	fpc_sample_logf("Got version: %s\r\n", version);
-    version_read = 1;
+	version_read = 1;
 }
 
 void on_enroll(uint8_t feedback, uint8_t samples_remaining)
 {
-    extern char *get_enroll_feedback_str_(uint8_t feedback);
-    fpc_sample_logf("Enroll samples remaining: %d, feedback: %s (%d)\r\n", samples_remaining,
-        get_enroll_feedback_str_(feedback), feedback);
+	extern char *get_enroll_feedback_str_(uint8_t feedback);
+	fpc_sample_logf("Enroll samples remaining: %d, feedback: %s (%d)\r\n", samples_remaining,
+			get_enroll_feedback_str_(feedback), feedback);
 }
 
 void on_identify(int is_match, uint16_t id)
 {
-    if (is_match) {
-        hal_set_led_status(HAL_LED_STATUS_MATCH);
-        fpc_sample_logf("Identify match on id %d\r\n", id);
+	if (is_match) {
+		hal_set_led_status(HAL_LED_STATUS_MATCH);
+		fpc_sample_logf("Identify match on id %d\r\n", id);
     }
     else {
-        hal_set_led_status(HAL_LED_STATUS_NO_MATCH);
-        fpc_sample_logf("Identify no match\r\n");
+	    hal_set_led_status(HAL_LED_STATUS_NO_MATCH);
+	    fpc_sample_logf("Identify no match\r\n");
     }
 }
 
 void on_list_templates(int num_templates, uint16_t *template_ids)
 {
-	fpc_sample_logf("Found %d template(s) on device\r\n", num_templates);
+    fpc_sample_logf("Found %d template(s) on device\r\n", num_templates);
 
     list_templates_done = 1;
     n_templates_on_device = num_templates;
@@ -384,6 +387,23 @@ void uart6_host_rx_data_clear()
 		temp = (uint8_t)(huart6.Instance->DR & 0x00FF);
 		(void)temp; // Annule le warning "set but not used"
 	}
+}
+
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA2_Stream1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
+
 }
 
 /**

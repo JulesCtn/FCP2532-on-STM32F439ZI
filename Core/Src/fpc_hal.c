@@ -32,6 +32,10 @@ fpc_result_t fpc_hal_init(void)
 
 fpc_result_t fpc_hal_tx(uint8_t *data, size_t len, uint32_t timeout, int flush)
 {
+	HAL_GPIO_WritePin(FPC2530_CS_N_GPIO_Port, FPC2530_CS_N_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(FPC2530_CS_N_GPIO_Port, FPC2530_CS_N_Pin, GPIO_PIN_SET);
+	HAL_Delay(2); // min delay between cs toggle
+
 	HAL_StatusTypeDef status = HAL_UART_Transmit(&huart6, data, (uint16_t)len, timeout);
 	return (status == HAL_OK) ? FPC_RESULT_OK : FPC_RESULT_FAILURE;
 }

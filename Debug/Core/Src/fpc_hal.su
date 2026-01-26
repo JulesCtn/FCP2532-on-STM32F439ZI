@@ -1,6 +1,6 @@
 ../Core/Src/fpc_hal.c:27:14:fpc_hal_init	8	static
 ../Core/Src/fpc_hal.c:33:14:fpc_hal_tx	32	static
-../Core/Src/fpc_hal.c:39:14:fpc_hal_rx	32	static
-../Core/Src/fpc_hal.c:45:5:fpc_hal_data_available	4	static
-../Core/Src/fpc_hal.c:50:14:fpc_hal_wfi	4	static,ignoring_inline_asm
-../Core/Src/fpc_hal.c:56:6:fpc_sample_logf	272	static
+../Core/Src/fpc_hal.c:43:14:fpc_hal_rx	32	static
+../Core/Src/fpc_hal.c:49:5:fpc_hal_data_available	4	static
+../Core/Src/fpc_hal.c:54:14:fpc_hal_wfi	4	static,ignoring_inline_asm
+../Core/Src/fpc_hal.c:60:6:fpc_sample_logf	272	static
