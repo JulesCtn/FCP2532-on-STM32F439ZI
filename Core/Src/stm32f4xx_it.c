@@ -293,16 +293,8 @@ void DMA2_Stream6_IRQHandler(void)
   */
 void USART6_IRQHandler(void)
 {
-  //Vérifie si l'interruption IDLE a eu lieu
-  if(__HAL_UART_GET_FLAG(&huart6, UART_FLAG_IDLE))
-  {
-	  __HAL_UART_CLEAR_IDLEFLAG(&huart6); // Clear le flag
-	/*
-	  // DMA_BUF_SIZE - nombre d'octets restants dans le compteur DMA
-	  uint16_t length = DMA_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart6.hdmarx);
-
-	  extern fpc2530_irq_active = true;*/
-  }
+  extern void host_uart_irq_handler(void);
+  host_uart_irq_handler();
   HAL_UART_IRQHandler(&huart6);
 }
 

@@ -1,0 +1,15 @@
+../Core/Src/fpc_hal.c:58:14:fpc_hal_init	16	static
+../Core/Src/fpc_hal.c:83:14:fpc_hal_tx	32	static
+../Core/Src/fpc_hal.c:89:14:fpc_hal_rx	32	static
+../Core/Src/fpc_hal.c:95:5:fpc_hal_data_available	4	static
+../Core/Src/fpc_hal.c:110:14:fpc_hal_wfi	4	static,ignoring_inline_asm
+../Core/Src/fpc_hal.c:116:6:fpc_sample_logf	272	static
+../Core/Src/fpc_hal.c:128:6:HAL_UART_RxCpltCallback	24	static
+../Core/Src/fpc_hal.c:151:6:HAL_UART_RxHalfCpltCallback	16	static
+../Core/Src/fpc_hal.c:159:6:HAL_UART_TxCpltCallback	16	static
+../Core/Src/fpc_hal.c:165:6:HAL_UART_TxHalfCpltCallback	16	static
+../Core/Src/fpc_hal.c:171:6:HAL_UART_ErrorCallback	16	static
+../Core/Src/fpc_hal.c:179:5:uart_host_transmit	32	static,ignoring_inline_asm
+../Core/Src/fpc_hal.c:222:5:uart_host_receive	48	static,ignoring_inline_asm
+../Core/Src/fpc_hal.c:298:6:uart_host_rx_data_clear	16	static
+../Core/Src/fpc_hal.c:307:6:host_uart_irq_handler	16	static

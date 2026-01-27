@@ -1,0 +1,15 @@
+../Core/Src/fpc_hal.c:58:14:fpc_hal_init	2
+../Core/Src/fpc_hal.c:83:14:fpc_hal_tx	2
+../Core/Src/fpc_hal.c:89:14:fpc_hal_rx	2
+../Core/Src/fpc_hal.c:95:5:fpc_hal_data_available	1
+../Core/Src/fpc_hal.c:110:14:fpc_hal_wfi	1
+../Core/Src/fpc_hal.c:116:6:fpc_sample_logf	1
+../Core/Src/fpc_hal.c:128:6:HAL_UART_RxCpltCallback	5
+../Core/Src/fpc_hal.c:151:6:HAL_UART_RxHalfCpltCallback	2
+../Core/Src/fpc_hal.c:159:6:HAL_UART_TxCpltCallback	2
+../Core/Src/fpc_hal.c:165:6:HAL_UART_TxHalfCpltCallback	2
+../Core/Src/fpc_hal.c:171:6:HAL_UART_ErrorCallback	2
+../Core/Src/fpc_hal.c:179:5:uart_host_transmit	8
+../Core/Src/fpc_hal.c:222:5:uart_host_receive	13
+../Core/Src/fpc_hal.c:298:6:uart_host_rx_data_clear	2
+../Core/Src/fpc_hal.c:307:6:host_uart_irq_handler	5

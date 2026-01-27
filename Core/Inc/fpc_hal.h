@@ -41,6 +41,7 @@ void fpc_sample_logf(const char *format, ...);
 int uart_host_transmit(uint8_t *data, size_t size, uint32_t timeout, int flush);
 int uart_host_receive(uint8_t *data, size_t size, uint32_t timeout);
 void host_uart_irq_handler(void);
+void uart_host_rx_data_clear();
 #else
 /**
  * @brief Debug Log function when logging is disabled => Void.

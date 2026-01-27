@@ -21,9 +21,15 @@
 #include "hal_common.h"
 #include "fpc_api.h"
 #include "fpc_hal.h"
+#include "stm32f4xx_hal_def.h"
+#include "stm32f4xx_it.h"
 
 extern UART_HandleTypeDef huart6; // Capteur FPC
 extern UART_HandleTypeDef huart3; // Debug channel
+
+#ifndef MIN
+    #define MIN(a,b) (((a)<(b))?(a):(b))
+#endif
 
 #define DMA_BUF_SIZE   128
 #define DMA_TIMEOUT_MS 2
@@ -41,6 +47,7 @@ bool tx_done = false;
 static volatile bool tx_half = false;
 static volatile bool uart_error = false;
 static volatile bool error = false;
+static volatile bool rx_available;
 static bool ignore_first_idle_irq = true;
 
 extern volatile bool fpc2530_irq_active;
@@ -51,6 +58,11 @@ static dma_event_t dma_uart_rx = { 0, DMA_BUF_SIZE, 0, 0, 0 };
 fpc_result_t fpc_hal_init(void)
 {
 	HAL_StatusTypeDef status;
+
+	HAL_UART_Abort(&huart6);
+	volatile uint32_t tmpreg = huart6.Instance->SR;
+	tmpreg = huart6.Instance->DR;
+	(void)tmpreg;
 
 	/* Clear IDLE Flag */
 	__HAL_UART_CLEAR_FLAG(&huart6, UART_IT_IDLE);
@@ -82,7 +94,17 @@ fpc_result_t fpc_hal_rx(uint8_t *data, size_t len, uint32_t timeout)
 
 int fpc_hal_data_available(void)
 {
-	return (__HAL_UART_GET_FLAG(&huart6, UART_FLAG_RXNE) != RESET);
+	/* 1. Sécurité : Si le DMA n'est pas encore lié à l'UART, on quitte */
+	/*if (huart6.hdmarx == NULL) {
+		return 0;
+	}
+
+	// 2. On vérifie le compteur seulement si le DMA est actif
+	if (__HAL_DMA_GET_COUNTER(huart6.hdmarx) != dma_uart_rx.prev_cndtr) {
+		return 1;
+	}*/
+
+	return rx_available ? 1 : 0;
 }
 
 fpc_result_t fpc_hal_wfi(void)
@@ -105,29 +127,52 @@ void fpc_sample_logf(const char *format, ...)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	if (huart->Instance == USART6) {
-		uint8_t received_byte = uart_rx_fifo[0];
+	if (huart->Instance == huart6.Instance) {
+		uint16_t curr_cndtr = __HAL_DMA_GET_COUNTER(huart->hdmarx);
 
-		fpc_sample_logf("DMA Received: %d\r\n", received_byte);
+		/*
+		 * Ignore IDLE Timeout when the received characters exactly filled up the DMA buffer and
+		 * DMA Rx Complete Interrupt is generated, but there is no new character during timeout.
+		 */
+		if (dma_uart_rx.flag && curr_cndtr == DMA_BUF_SIZE) {
+			dma_uart_rx.flag = 0;
+			return;
+		}
+
+		if (!dma_uart_rx.flag) {
+			dma_uart_rx.rx_complete_count++;
+		}
+		dma_uart_rx.flag = 0;
+
+		rx_available = true;
 	}
 }
 
+void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == huart6.Instance) {
+        rx_available = true;
+        dma_uart_rx.rx_half_count++;
+    }
+}
+
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
-    if (huart->Instance == USART6) {
+    if (huart->Instance == huart6.Instance) {
         tx_done = true;
     }
 }
 
 void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart) {
-    if (huart->Instance == USART6) {
+    if (huart->Instance == huart6.Instance) {
         tx_half = true;
     }
 }
 
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
-    if (huart->Instance == USART6) {
-        uart_error = true;
-        tx_done = true; // Pour sortir de la boucle while en cas d'erreur
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == huart6.Instance) {
+        //uart_error = true;
+        uart_host_rx_data_clear();
     }
 }
 
@@ -191,13 +236,13 @@ int uart_host_receive(uint8_t *data, size_t size, uint32_t timeout)
         // Assert here
     }
 
-    if (__HAL_DMA_GET_COUNTER(&uart6.hdmarx) == dma_uart_rx.prev_cndtr) {
+    if (__HAL_DMA_GET_COUNTER(huart6.hdmarx) == dma_uart_rx.prev_cndtr) {
         __WFI();
     }
 
     /* Check and read from RX FIFO */
     while (size) {
-        uint16_t curr_cndtr = __HAL_DMA_GET_COUNTER(&uart_host_hdma_rx);
+        uint16_t curr_cndtr = __HAL_DMA_GET_COUNTER(huart6.hdmarx);
 
         if (curr_cndtr != dma_uart_rx.prev_cndtr) {
             uint32_t cur_pos = DMA_BUF_SIZE - curr_cndtr;
@@ -244,25 +289,37 @@ int uart_host_receive(uint8_t *data, size_t size, uint32_t timeout)
     }
 
 exit:
-    if (__HAL_DMA_GET_COUNTER(&uart_host_hdma_rx) == dma_uart_rx.prev_cndtr) {
-        rx_available = false;
+	if (__HAL_DMA_GET_COUNTER(huart6.hdmarx) == dma_uart_rx.prev_cndtr) {
+		rx_available = false;
     }
     return rc;
+}
+
+void uart_host_rx_data_clear()
+{
+	uint8_t temp;
+	while (__HAL_UART_GET_FLAG(&huart6, UART_FLAG_RXNE)) {
+		temp = (uint8_t)(huart6.Instance->DR & 0x00FF);
+		(void)temp; // Annule le warning "set but not used"
+	}
 }
 
 void host_uart_irq_handler(void)
 {
     /* UART IDLE Interrupt */
-    if ((huart6.Instance->SR & USART_ISR_IDLE) != RESET) {
-        huart6.Instance->ICR = UART_CLEAR_IDLEF;
+	if((__HAL_UART_GET_FLAG(&huart6, UART_FLAG_IDLE) != RESET) && (__HAL_UART_GET_IT_SOURCE(&huart6, UART_IT_IDLE) != RESET))
+	{
+		__HAL_UART_CLEAR_IDLEFLAG(&huart6);
+
         if (ignore_first_idle_irq) {
             ignore_first_idle_irq = false;
         }
         else {
             dma_uart_rx.flag = 1;
             dma_uart_rx.idle_irq_count++;
-            if(uart_host_hdma_rx.XferCpltCallback != NULL) {
-                uart_host_hdma_rx.XferCpltCallback(&uart_host_hdma_rx);
+            if(huart6.hdmarx->XferCpltCallback != NULL)
+            {
+            	huart6.hdmarx->XferCpltCallback(huart6.hdmarx);
             }
         }
     }

@@ -855,7 +855,7 @@ fpc_result_t fpc_host_sample_handle_rx_data(void)
             ((frame_hdr.flags & FPC_FRAME_FLAG_SENDER_FW_APP) == 0) ||
             (frame_hdr.type != FPC_FRAME_TYPE_CMD_RESPONSE &&
              frame_hdr.type != FPC_FRAME_TYPE_CMD_EVENT)) {
-            fpc_sample_logf("Sanity check of rx data failed\n");
+            fpc_sample_logf("Sanity check of rx data failed\r\n");
             result = FPC_RESULT_IO_BAD_DATA;
         }
     }

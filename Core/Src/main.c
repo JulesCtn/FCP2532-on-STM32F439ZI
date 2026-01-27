@@ -181,7 +181,6 @@ int main(void)
 {
   fpc_result_t result;
   fpc_host_sample_init((fpc_cmd_callbacks_t*)&cmd_cb);
-  fpc_hal_init();
 
   HAL_Init();
   SystemClock_Config();
@@ -193,6 +192,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
 
+  fpc_hal_init();
   hal_reset_device();
   fpc_sample_logf("\nFPC2532 example app (UART)\r\n\n");
   HAL_Delay(200);
@@ -212,12 +212,19 @@ int main(void)
 		fpc_cmd_abort();
 	}
 
+	/*volatile uint32_t temp = huart6.Instance->SR;
+	temp = huart6.Instance->DR;
+	__HAL_UART_CLEAR_OREFLAG(&huart6);
+
+	// 2. On force le bit DMAR (bit 6) et DMAT (bit 7)
+	huart6.Instance->CR3 |= (USART_CR3_DMAR | USART_CR3_DMAT);*/
+
 	if (fpc_hal_data_available()) {
 		result = fpc_host_sample_handle_rx_data();
 		if (result != FPC_RESULT_OK && result != FPC_PENDING_OPERATION) {
 			fpc_sample_logf("Bad incoming data (%d). Wait and try again in some sec\r\n", result);
 			HAL_Delay(100);
-			uart6_host_rx_data_clear();
+			uart_host_rx_data_clear();
 		}
 		process_state();
 	}
@@ -374,7 +381,7 @@ static void MX_USART3_UART_Init(void)
 static void MX_USART6_UART_Init(void)
 {
   huart6.Instance = USART6;
-  huart6.Init.BaudRate = 115200;
+  huart6.Init.BaudRate = 921600;
   huart6.Init.WordLength = UART_WORDLENGTH_8B;
   huart6.Init.StopBits = UART_STOPBITS_1;
   huart6.Init.Parity = UART_PARITY_NONE;
@@ -385,15 +392,6 @@ static void MX_USART6_UART_Init(void)
   {
     Error_Handler();
   }
-}
-
-void uart6_host_rx_data_clear()
-{
-	uint8_t temp;
-	while (__HAL_UART_GET_FLAG(&huart6, UART_FLAG_RXNE)) {
-		temp = (uint8_t)(huart6.Instance->DR & 0x00FF);
-		(void)temp; // Annule le warning "set but not used"
-	}
 }
 
 /**
@@ -408,16 +406,16 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA1_Stream1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
   /* DMA1_Stream3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
   /* DMA2_Stream1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
   /* DMA2_Stream6_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream6_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA2_Stream6_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream6_IRQn);
 
 }
@@ -493,7 +491,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(FPC2530_CS_N_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
