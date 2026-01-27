@@ -156,7 +156,7 @@ fpc_result_t fpc_cmd_status_request(void)
     cmd.cmd_id = CMD_STATUS;
     cmd.type = FPC_FRAME_TYPE_CMD_REQUEST;
 
-    fpc_sample_logf(">>> CMD_STATUS");
+    fpc_sample_logf("\n>>> CMD_STATUS");
     result = fpc_send_request(&cmd, sizeof(fpc_cmd_hdr_t));
 
     return result;
@@ -172,7 +172,7 @@ fpc_result_t fpc_cmd_version_request(void)
     cmd.cmd_id = CMD_VERSION;
     cmd.type = FPC_FRAME_TYPE_CMD_REQUEST;
 
-    fpc_sample_logf(">>> CMD_VERSION	");
+    fpc_sample_logf("\n>>> CMD_VERSION\r\n");
     result = fpc_send_request(&cmd, sizeof(fpc_cmd_hdr_t));
 
     return result;
@@ -196,7 +196,7 @@ fpc_result_t fpc_cmd_enroll_request(fpc_id_type_t *id)
         cmd_req.tpl_id.type = id->type;
         cmd_req.tpl_id.id = id->id;
 
-        fpc_sample_logf(">>> CMD_ENROLL (id.type=%s, id=%d)\r\n",
+        fpc_sample_logf("\n>>> CMD_ENROLL (id.type=%s, id=%d)\r\n",
             get_id_type_str_(id->type), id->id);
 
         result = fpc_send_request(&cmd_req.cmd, sizeof(fpc_cmd_enroll_request_t));
@@ -224,7 +224,7 @@ fpc_result_t fpc_cmd_identify_request(fpc_id_type_t *id, uint16_t tag)
         cmd_req.tpl_id.id = id->id;
         cmd_req.tag = tag;
 
-        fpc_sample_logf(">>> CMD_IDENTIFY (tag=%d, id.type=%s, id=%d)",
+        fpc_sample_logf("\n>>> CMD_IDENTIFY (tag=%d, id.type=%s, id=%d)",
             tag, get_id_type_str_(id->type), id->id);
 
         result = fpc_send_request(&cmd_req.cmd, sizeof(fpc_cmd_identify_request_t));
@@ -243,7 +243,7 @@ fpc_result_t fpc_cmd_abort(void)
     cmd.cmd_id = CMD_ABORT;
     cmd.type = FPC_FRAME_TYPE_CMD_REQUEST;
 
-    fpc_sample_logf(">>> CMD_ABORT");
+    fpc_sample_logf("\n>>> CMD_ABORT");
     result = fpc_send_request(&cmd, sizeof(fpc_cmd_hdr_t));
 
     return result;
@@ -259,7 +259,7 @@ fpc_result_t fpc_cmd_list_templates_request(void)
     cmd.cmd_id = CMD_LIST_TEMPLATES;
     cmd.type = FPC_FRAME_TYPE_CMD_REQUEST;
 
-    fpc_sample_logf(">>> CMD_LIST_TEMPLATES");
+    fpc_sample_logf("\n>>> CMD_LIST_TEMPLATES\r\n");
     result = fpc_send_request(&cmd, sizeof(fpc_cmd_hdr_t));
 
     return result;
@@ -283,7 +283,7 @@ fpc_result_t fpc_cmd_delete_template_request(fpc_id_type_t *id)
         cmd_req.tpl_id.type = id->type;
         cmd_req.tpl_id.id = id->id;
 
-        fpc_sample_logf(">>> CMD_DELETE_TEMPLATE (id.type=%s, id=%d)\r\n",
+        fpc_sample_logf("\n>>> CMD_DELETE_TEMPLATE (id.type=%s, id=%d)\r\n",
             get_id_type_str_(id->type), id->id);
 
         result = fpc_send_request(&cmd_req.cmd, sizeof(fpc_cmd_template_delete_request_t));
@@ -302,7 +302,7 @@ fpc_result_t fpc_cmd_reset_request(void)
     cmd.cmd_id = CMD_RESET;
     cmd.type = FPC_FRAME_TYPE_CMD_REQUEST;
 
-    fpc_sample_logf(">>> CMD_RESET");
+    fpc_sample_logf("\n>>> CMD_RESET");
     result = fpc_send_request(&cmd, sizeof(fpc_cmd_hdr_t));
 
     return result;
@@ -324,7 +324,7 @@ fpc_result_t fpc_cmd_navigation_request(uint8_t orientation)
         cmd_req.cmd.type = FPC_FRAME_TYPE_CMD_REQUEST;
         cmd_req.config = orientation;
 
-        fpc_sample_logf(">>> CMD_NAVIGATION (orientation=%d)", orientation);
+        fpc_sample_logf("\n>>> CMD_NAVIGATION (orientation=%d)", orientation);
         result = fpc_send_request(&cmd_req.cmd, sizeof(fpc_cmd_navigation_request_t));
     }
 
@@ -341,7 +341,7 @@ fpc_result_t fpc_cmd_bist_request(void)
     cmd.cmd_id = CMD_BIST;
     cmd.type = FPC_FRAME_TYPE_CMD_REQUEST;
 
-    fpc_sample_logf(">>> CMD_BIST");
+    fpc_sample_logf("\n>>> CMD_BIST");
     result = fpc_send_request(&cmd, sizeof(fpc_cmd_hdr_t));
 
     return result;
@@ -367,7 +367,7 @@ fpc_result_t fpc_cmd_gpio_set_request(uint8_t pin, uint8_t mode, uint8_t state)
         cmd_req.mode = mode;
         cmd_req.state = state;
 
-        fpc_sample_logf(">>> CMD_GPIO_CONTROL (set pin=%d, mode=%d, state=%d)",
+        fpc_sample_logf("\n>>> CMD_GPIO_CONTROL (set pin=%d, mode=%d, state=%d)",
             pin, mode, state);
         result = fpc_send_request(&cmd_req.cmd, sizeof(fpc_cmd_pinctrl_gpio_request_t));
     }
@@ -389,7 +389,7 @@ fpc_result_t fpc_cmd_gpio_get_request(uint8_t pin)
     cmd_req.mode = 0;
     cmd_req.state = 0;
 
-    fpc_sample_logf(">>> CMD_GPIO_CONTROL (get pin=%d)", pin);
+    fpc_sample_logf("\n>>> CMD_GPIO_CONTROL (get pin=%d)", pin);
     result = fpc_send_request(&cmd_req.cmd, sizeof(fpc_cmd_pinctrl_gpio_request_t));
 
     return result;
@@ -412,7 +412,7 @@ fpc_result_t fpc_cmd_system_config_set_request(fpc_system_config_t *cfg)
 
         cmd_req.cfg = *cfg;
 
-        fpc_sample_logf(">>> CMD_SET_SYSTEM_CONFIG");
+        fpc_sample_logf("\n>>> CMD_SET_SYSTEM_CONFIG");
         result = fpc_send_request(&cmd_req.cmd, sizeof(fpc_cmd_set_config_request_t));
     }
 
@@ -435,7 +435,7 @@ fpc_result_t fpc_cmd_system_config_get_request(uint8_t type)
         cmd_req.cmd.type = FPC_FRAME_TYPE_CMD_REQUEST;
         cmd_req.config_type = type;
 
-        fpc_sample_logf(">>> CMD_SET_SYSTEM_CONFIG (type=%d)", type);
+        fpc_sample_logf("\n>>> CMD_SET_SYSTEM_CONFIG (type=%d)", type);
         result = fpc_send_request(&cmd_req.cmd, sizeof(fpc_cmd_get_config_request_t));
     }
 
@@ -466,10 +466,10 @@ static fpc_result_t parse_cmd_status(fpc_cmd_hdr_t *cmd_hdr, size_t size)
     }
 
     if (result == FPC_RESULT_OK) {
-        fpc_sample_logf("CMD_STATUS.event = %s (%04X)",
+        fpc_sample_logf("CMD_STATUS.event = %s (%04X)\n\r",
             get_event_str_(status->event), status->event);
-        fpc_sample_logf("CMD_STATUS.state = %04X", status->state);
-        fpc_sample_logf("CMD_STATUS.error = %d", status->app_fail_code);
+        fpc_sample_logf("CMD_STATUS.state = %04X\n\r", status->state);
+        fpc_sample_logf("CMD_STATUS.error = %d\n\r", status->app_fail_code);
     }
 
     if ((status->app_fail_code != 0) && cmd_callbacks.on_error) {
@@ -492,7 +492,7 @@ static fpc_result_t parse_cmd_version(fpc_cmd_hdr_t *cmd_hdr, size_t size)
     ver = (fpc_cmd_version_response_t*)cmd_hdr;
 
     if (!ver) {
-        fpc_sample_logf("CMD_VERSION: Invalid parameter");
+        fpc_sample_logf("CMD_VERSION: Invalid parameter\r\n");
         result = FPC_RESULT_INVALID_PARAM;
     }
 
@@ -503,20 +503,20 @@ static fpc_result_t parse_cmd_version(fpc_cmd_hdr_t *cmd_hdr, size_t size)
             ver->version_str_len;
 
         if (size != full_size) {
-            fpc_sample_logf("CMD_VERSION invalid size (%d vs %d)", size, full_size);
+            fpc_sample_logf("CMD_VERSION invalid size (%d vs %d)\r\n", size, full_size);
             result = FPC_RESULT_INVALID_PARAM;
         }
     }
 
     if (result == FPC_RESULT_OK) {
-        fpc_sample_logf("CMD_VERSION.fw_id = %d", ver->fw_id);
-        fpc_sample_logf("CMD_VERSION.unique_id = %08X %08X %08X",
+        fpc_sample_logf("CMD_VERSION.fw_id = %d\r\n", ver->fw_id);
+        fpc_sample_logf("CMD_VERSION.unique_id = %08X %08X %08X\r\n",
             ver->mcu_unique_id[0],
             ver->mcu_unique_id[1],
             ver->mcu_unique_id[2]);
-        fpc_sample_logf("CMD_VERSION.fuse_level = %d", ver->fw_fuse_level);
-        fpc_sample_logf("CMD_VERSION.version_str_len = %d", ver->version_str_len);
-        fpc_sample_logf("CMD_VERSION.version = %s", ver->version_str);
+        fpc_sample_logf("CMD_VERSION.fuse_level = %d\r\n", ver->fw_fuse_level);
+        fpc_sample_logf("CMD_VERSION.version_str_len = %d\r\n", ver->version_str_len);
+        fpc_sample_logf("CMD_VERSION.version = %s\r\n", ver->version_str);
     }
 
     if (cmd_callbacks.on_version) {
@@ -608,7 +608,7 @@ static fpc_result_t parse_cmd_list_templates(fpc_cmd_hdr_t *cmd_hdr, size_t size
     list = (fpc_cmd_template_info_response_t*)cmd_hdr;
 
     if (!list) {
-        fpc_sample_logf("CMD_LIST_TEMPLATES: Invalid parameter");
+        fpc_sample_logf("CMD_LIST_TEMPLATES: Invalid parameter\r\n");
         result = FPC_RESULT_INVALID_PARAM;
     }
 
@@ -617,18 +617,18 @@ static fpc_result_t parse_cmd_list_templates(fpc_cmd_hdr_t *cmd_hdr, size_t size
             (sizeof(uint16_t) * list->number_of_templates);
 
         if (size != total_pl_size) {
-            fpc_sample_logf("CMD_LIST_TEMPLATES invalid size (%d vs %d)", size,
+            fpc_sample_logf("CMD_LIST_TEMPLATES invalid size (%d vs %d)\r\n", size,
                 total_pl_size);
             result = FPC_RESULT_INVALID_PARAM;
         }
     }
 
     if (result == FPC_RESULT_OK) {
-        fpc_sample_logf("CMD_LIST_TEMPLATES.nbr_of_tpls = %d",
+        fpc_sample_logf("CMD_LIST_TEMPLATES.nbr_of_tpls = %d\r\n",
             list->number_of_templates);
 
         for (i = 0; i < list->number_of_templates; i++) {
-            fpc_sample_logf("CMD_LIST_TEMPLATES.id = %d", list->template_id_list[i]);
+            fpc_sample_logf("CMD_LIST_TEMPLATES.id = %d\r\n", list->template_id_list[i]);
         }
     }
 

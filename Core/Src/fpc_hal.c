@@ -59,11 +59,6 @@ fpc_result_t fpc_hal_init(void)
 {
 	HAL_StatusTypeDef status;
 
-	HAL_UART_Abort(&huart6);
-	volatile uint32_t tmpreg = huart6.Instance->SR;
-	tmpreg = huart6.Instance->DR;
-	(void)tmpreg;
-
 	/* Clear IDLE Flag */
 	__HAL_UART_CLEAR_FLAG(&huart6, UART_IT_IDLE);
 	/* Enable UART IDLE interrupt */
@@ -71,10 +66,6 @@ fpc_result_t fpc_hal_init(void)
 
 	/* Start UART RX */
 	status = HAL_UART_Receive_DMA(&huart6, uart_rx_fifo, DMA_BUF_SIZE);
-
-	if (status != HAL_OK) {
-		fpc_sample_logf("DMA RX Start Failed! Status: %d\r\n", status);
-	}
 
 	hal_set_if_config(HAL_IF_CONFIG_UART);
     return FPC_RESULT_OK;
@@ -94,15 +85,10 @@ fpc_result_t fpc_hal_rx(uint8_t *data, size_t len, uint32_t timeout)
 
 int fpc_hal_data_available(void)
 {
-	/* 1. Sécurité : Si le DMA n'est pas encore lié à l'UART, on quitte */
-	/*if (huart6.hdmarx == NULL) {
-		return 0;
-	}
-
-	// 2. On vérifie le compteur seulement si le DMA est actif
+	// On vérifie le compteur seulement si le DMA est actif
 	if (__HAL_DMA_GET_COUNTER(huart6.hdmarx) != dma_uart_rx.prev_cndtr) {
 		return 1;
-	}*/
+	}
 
 	return rx_available ? 1 : 0;
 }

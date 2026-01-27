@@ -212,13 +212,6 @@ int main(void)
 		fpc_cmd_abort();
 	}
 
-	/*volatile uint32_t temp = huart6.Instance->SR;
-	temp = huart6.Instance->DR;
-	__HAL_UART_CLEAR_OREFLAG(&huart6);
-
-	// 2. On force le bit DMAR (bit 6) et DMAT (bit 7)
-	huart6.Instance->CR3 |= (USART_CR3_DMAR | USART_CR3_DMAT);*/
-
 	if (fpc_hal_data_available()) {
 		result = fpc_host_sample_handle_rx_data();
 		if (result != FPC_RESULT_OK && result != FPC_PENDING_OPERATION) {
@@ -497,6 +490,10 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
+
+/* USER CODE BEGIN 4 */
+
+/* USER CODE END 4 */
 
 /**
   * @brief  This function is executed in case of error occurrence.
