@@ -91,13 +91,13 @@ static void process_state(void)
                 if (n_templates_on_device < N_FINGERS_TO_ENROLL) {
                     fpc_id_type_t id_type = {ID_TYPE_GENERATE_NEW, 0};
                     n_fingers_to_enroll = N_FINGERS_TO_ENROLL - n_templates_on_device;
-                    fpc_sample_logf("\nStarting enroll %d fingers\r\n", n_fingers_to_enroll);
+                    log_print("\nStarting enroll %d fingers\r\n", n_fingers_to_enroll);
                     next_state = APP_STATE_WAIT_ENROLL;
                     fpc_cmd_enroll_request(&id_type);
                 }
                 else {
                     fpc_id_type_t id_type = {ID_TYPE_ALL, 0};
-                    fpc_sample_logf("\nStarting identify\r\n");
+                    log_print("\nStarting identify\r\n");
                     next_state = APP_STATE_WAIT_IDENTIFY;
                     fpc_cmd_identify_request(&id_type, 0);
                 }
@@ -105,15 +105,15 @@ static void process_state(void)
             break;
         case APP_STATE_WAIT_ENROLL:
             if ((device_state & STATE_ENROLL) == 0) {
-            	fpc_sample_logf("\nEnroll one finger done.\r\n");
+            	log_print("\nEnroll one finger done.\r\n");
                 n_fingers_to_enroll--;
                 if (n_fingers_to_enroll > 0) {
                     fpc_id_type_t id_type = {ID_TYPE_GENERATE_NEW, 0};
-                    fpc_sample_logf("\nStarting enroll\r\n");
+                    log_print("\nStarting enroll\r\n");
                     fpc_cmd_enroll_request(&id_type);
                 } else {
                     fpc_id_type_t id_type = {ID_TYPE_ALL, 0};
-                    fpc_sample_logf("\nStarting identify\r\n");
+                    log_print("\nStarting identify\r\n");
                     next_state = APP_STATE_WAIT_IDENTIFY;
                     fpc_cmd_identify_request(&id_type, 0);
                 }
@@ -129,7 +129,7 @@ static void process_state(void)
         case APP_STATE_WAIT_ABORT:
             if ((device_state & (STATE_ENROLL | STATE_IDENTIFY)) == 0) {
                 fpc_id_type_t id_type = {ID_TYPE_ALL, 0};
-                fpc_sample_logf("\nDeleting templates.\r\n");
+                log_print("\nDeleting templates.\r\n");
                 next_state = APP_STATE_WAIT_DELETE_TEMPLATES;
                 fpc_cmd_delete_template_request(&id_type);
             }
@@ -140,7 +140,7 @@ static void process_state(void)
             fpc_id_type_t id_type = {ID_TYPE_GENERATE_NEW, 0};
             n_fingers_to_enroll = N_FINGERS_TO_ENROLL;
             hal_set_led_status(HAL_LED_STATUS_WAITTOUCH);
-            fpc_sample_logf("\nStarting enroll.\r\n");
+            log_print("\nStarting enroll.\r\n");
             next_state = APP_STATE_WAIT_ENROLL;
             fpc_cmd_enroll_request(&id_type);
             break;
@@ -150,7 +150,7 @@ static void process_state(void)
     }
 
     if (next_state != app_state) {
-    	fpc_sample_logf("State transition %d -> %d\r\n", app_state, next_state);
+    	log_print("State transition %d -> %d\r\n", app_state, next_state);
         app_state = next_state;
     }
 }
@@ -194,7 +194,7 @@ int main(void)
 
   fpc_hal_init();
   hal_reset_device();
-  fpc_sample_logf("\nFPC2532 example app (UART)\r\n\n");
+  log_print("FPC2532 example app (UART)\r\n\n");
   HAL_Delay(200);
 
   // Start by waiting for device status (APP_FW_RDY).
@@ -207,7 +207,7 @@ int main(void)
 	fpc_hal_wfi();
 
 	if (hal_check_button_pressed() > 200) {
-		fpc_sample_logf("\nButton pressed\r\n");
+		log_print("\nButton pressed\r\n");
 		app_state = APP_STATE_WAIT_ABORT;
 		fpc_cmd_abort();
 	}
@@ -215,7 +215,7 @@ int main(void)
 	if (fpc_hal_data_available()) {
 		result = fpc_host_sample_handle_rx_data();
 		if (result != FPC_RESULT_OK && result != FPC_PENDING_OPERATION) {
-			fpc_sample_logf("Bad incoming data (%d). Wait and try again in some sec\r\n", result);
+			log_print("Bad incoming data (%d). Wait and try again in some sec\r\n", result);
 			HAL_Delay(100);
 			uart_host_rx_data_clear();
 		}
@@ -228,7 +228,7 @@ int main(void)
 void on_error(uint16_t error)
 {
 	hal_set_led_status(HAL_LED_STATUS_ERROR);
-	fpc_sample_logf("Got error %d.\r\n", error);
+	log_print("Got error %d.\r\n", error);
 	quit = 1;
 }
 
@@ -242,14 +242,14 @@ void on_status(uint16_t event, uint16_t state)
 
 void on_version(char* version)
 {
-	fpc_sample_logf("Got version: %s\r\n", version);
+	log_print("Got version: %s\r\n", version);
 	version_read = 1;
 }
 
 void on_enroll(uint8_t feedback, uint8_t samples_remaining)
 {
 	extern char *get_enroll_feedback_str_(uint8_t feedback);
-	fpc_sample_logf("Enroll samples remaining: %d, feedback: %s (%d)\r\n", samples_remaining,
+	log_print("Enroll samples remaining: %d, feedback: %s (%d)\r\n", samples_remaining,
 			get_enroll_feedback_str_(feedback), feedback);
 }
 
@@ -257,17 +257,17 @@ void on_identify(int is_match, uint16_t id)
 {
 	if (is_match) {
 		hal_set_led_status(HAL_LED_STATUS_MATCH);
-		fpc_sample_logf("Identify match on id %d\r\n", id);
+		log_print("Identify match on id %d\r\n", id);
     }
     else {
 	    hal_set_led_status(HAL_LED_STATUS_NO_MATCH);
-	    fpc_sample_logf("Identify no match\r\n");
+	    log_print("Identify no match\r\n");
     }
 }
 
 void on_list_templates(int num_templates, uint16_t *template_ids)
 {
-    fpc_sample_logf("Found %d template(s) on device\r\n", num_templates);
+    log_print("Found %d template(s) on device\r\n", num_templates);
 
     list_templates_done = 1;
     n_templates_on_device = num_templates;

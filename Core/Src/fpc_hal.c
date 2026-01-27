@@ -33,6 +33,7 @@ extern UART_HandleTypeDef huart3; // Debug channel
 
 #define DMA_BUF_SIZE   128
 #define DMA_TIMEOUT_MS 2
+#define MAX_LINE_LEN 100
 
 typedef struct
 {
@@ -66,6 +67,7 @@ fpc_result_t fpc_hal_init(void)
 
 	/* Start UART RX */
 	status = HAL_UART_Receive_DMA(&huart6, uart_rx_fifo, DMA_BUF_SIZE);
+	(void)status;
 
 	hal_set_if_config(HAL_IF_CONFIG_UART);
     return FPC_RESULT_OK;
@@ -99,7 +101,7 @@ fpc_result_t fpc_hal_wfi(void)
     return FPC_RESULT_OK;
 }
 
-void fpc_sample_logf(const char *format, ...)
+void log_print(const char *format, ...)
 {
 	char buffer[256];
 	va_list arglist;
@@ -110,6 +112,22 @@ void fpc_sample_logf(const char *format, ...)
 
 	va_end(arglist);
 }
+#ifdef ENABLE_DEBUG_LOGS
+void fpc_sample_logf(const char *format, ...)
+{
+    va_list arglist;
+    char tmp[MAX_LINE_LEN];
+	int len;
+
+    va_start(arglist, format);
+    //uart_debug_vprintf(format, arglist);
+    len = vsnprintf(tmp, MAX_LINE_LEN - 2, format, arglist);
+	tmp[len] = '\n';
+	(void)HAL_UART_Transmit(&huart3, (uint8_t*)tmp, len + 1, 1000);
+
+    va_end(arglist);
+}
+#endif
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {

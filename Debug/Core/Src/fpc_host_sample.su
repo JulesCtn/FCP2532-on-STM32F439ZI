@@ -7,7 +7,7 @@
 ../Core/Src/fpc_host_sample.c:150:14:fpc_cmd_status_request	16	static
 ../Core/Src/fpc_host_sample.c:166:14:fpc_cmd_version_request	16	static
 ../Core/Src/fpc_host_sample.c:182:14:fpc_cmd_enroll_request	32	static
-../Core/Src/fpc_host_sample.c:209:14:fpc_cmd_identify_request	40	static
+../Core/Src/fpc_host_sample.c:209:14:fpc_cmd_identify_request	32	static
 ../Core/Src/fpc_host_sample.c:237:14:fpc_cmd_abort	16	static
 ../Core/Src/fpc_host_sample.c:253:14:fpc_cmd_list_templates_request	16	static
 ../Core/Src/fpc_host_sample.c:269:14:fpc_cmd_delete_template_request	32	static

@@ -30,7 +30,7 @@
 /**
  * @brief Enable debug log printouts by setting this define.
 */
-#define ENABLE_DEBUG_LOGS
+//#define ENABLE_DEBUG_LOGS
 
 
 #ifdef ENABLE_DEBUG_LOGS
@@ -38,10 +38,6 @@
  * @brief Debug Log function. Printf style
  */
 void fpc_sample_logf(const char *format, ...);
-int uart_host_transmit(uint8_t *data, size_t size, uint32_t timeout, int flush);
-int uart_host_receive(uint8_t *data, size_t size, uint32_t timeout);
-void host_uart_irq_handler(void);
-void uart_host_rx_data_clear();
 #else
 /**
  * @brief Debug Log function when logging is disabled => Void.
@@ -49,7 +45,11 @@ void uart_host_rx_data_clear();
 #define fpc_sample_logf(...)
 #endif
 
-
+void log_print(const char *format, ...);
+int uart_host_transmit(uint8_t *data, size_t size, uint32_t timeout, int flush);
+int uart_host_receive(uint8_t *data, size_t size, uint32_t timeout);
+void host_uart_irq_handler(void);
+void uart_host_rx_data_clear();
 /**
  * @brief HAL Initialization function.
  *

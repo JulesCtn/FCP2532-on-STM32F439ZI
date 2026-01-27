@@ -1,5 +1,5 @@
 ../Core/Src/hal_common.c:19:10:hal_check_button_pressed	16	static
 ../Core/Src/hal_common.c:28:6:HAL_GPIO_EXTI_Callback	16	static
-../Core/Src/hal_common.c:83:6:hal_set_led_status	16	static
-../Core/Src/hal_common.c:108:6:hal_reset_device	8	static
-../Core/Src/hal_common.c:115:6:hal_set_if_config	16	static
+../Core/Src/hal_common.c:46:6:hal_set_led_status	16	static
+../Core/Src/hal_common.c:71:6:hal_reset_device	8	static
+../Core/Src/hal_common.c:78:6:hal_set_if_config	16	static
