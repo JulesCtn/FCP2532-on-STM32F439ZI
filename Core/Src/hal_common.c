@@ -46,23 +46,34 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 void hal_set_led_status(hal_led_status_t status)
 {
 	switch(status) {
-	        case HAL_LED_STATUS_MATCH:    // Blue LED
-	            HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
+	        case HAL_LED_STATUS_MATCH:    // Green LED
+	        	HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+	        	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
 	            break;
-	        case HAL_LED_STATUS_NO_MATCH:
-	        	HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
-	        	HAL_Delay(1000);
-	        	HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
-	        	break;
-	        case HAL_LED_STATUS_WAITTOUCH:
+	        case HAL_LED_STATUS_NO_MATCH:	// Red LED only
+	        	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
 	        	HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
-				HAL_Delay(1000);
-				HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
+	        	break;
+	        case HAL_LED_STATUS_WAITTOUCH: // Blue LED only
+	        	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+	            HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
+				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
 				break;
-	        case HAL_LED_STATUS_ERROR:    // Red LED
-	            HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+	        case HAL_LED_STATUS_ERROR:    // Toggle all 3 LEDs
+	        	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
+
+				HAL_Delay(500);
+
+	        	HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+	        	HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
+	            HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
 	            break;
 	        default:
+	        	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
 	        	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
 	        	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
 	    }
