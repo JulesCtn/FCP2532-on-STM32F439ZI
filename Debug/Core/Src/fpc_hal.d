@@ -27,8 +27,7 @@ Core/Src/fpc_hal.o: ../Core/Src/fpc_hal.c ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
  ../Core/Inc/hal_common.h ../Core/Inc/fpc_api.h ../Core/Inc/fpc_hal.h \
- ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h \
- ../Core/Inc/stm32f4xx_it.h
+ ../Core/Inc/stm32f4xx_it.h ../Core/Inc/fpc_host_sample.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -60,5 +59,5 @@ Core/Src/fpc_hal.o: ../Core/Src/fpc_hal.c ../Core/Inc/main.h \
 ../Core/Inc/hal_common.h:
 ../Core/Inc/fpc_api.h:
 ../Core/Inc/fpc_hal.h:
-../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h:
 ../Core/Inc/stm32f4xx_it.h:
+../Core/Inc/fpc_host_sample.h:

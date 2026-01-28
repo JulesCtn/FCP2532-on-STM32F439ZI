@@ -48,8 +48,9 @@ void fpc_sample_logf(const char *format, ...);
 void log_print(const char *format, ...);
 int uart_host_transmit(uint8_t *data, size_t size, uint32_t timeout, int flush);
 int uart_host_receive(uint8_t *data, size_t size, uint32_t timeout);
-void host_uart_irq_handler(void);
+void host_uart_irq_handler();
 void uart_host_rx_data_clear();
+void enable_sensor_low_power();
 /**
  * @brief HAL Initialization function.
  *

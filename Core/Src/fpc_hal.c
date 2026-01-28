@@ -12,17 +12,17 @@
  */
 
 #include "main.h"
+#include "hal_common.h"
+#include "fpc_api.h"
+#include "fpc_hal.h"
+#include "stm32f4xx_it.h"
+#include "fpc_host_sample.h"
+
 #include <stdarg.h>
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdbool.h>
-
-#include "hal_common.h"
-#include "fpc_api.h"
-#include "fpc_hal.h"
-#include "stm32f4xx_hal_def.h"
-#include "stm32f4xx_it.h"
 
 extern UART_HandleTypeDef huart6; // Capteur FPC
 extern UART_HandleTypeDef huart3; // Debug channel
@@ -101,6 +101,24 @@ fpc_result_t fpc_hal_wfi(void)
     return FPC_RESULT_OK;
 }
 
+void enable_sensor_low_power(void)
+{
+    fpc_system_config_t my_cfg;
+
+    // Config Version
+    my_cfg.version = 1;
+    my_cfg.finger_scan_interval_ms = 34;
+    my_cfg.sys_flags = 33;
+	my_cfg.uart_delay_before_irq_ms = 1;
+	my_cfg.uart_baudrate = 5;
+	my_cfg.idfy_max_consecutive_fails = 5;
+	my_cfg.idfy_lockout_time_s = 15;
+    // CHANGING Idle time after last command, before entering stop mode [ms]
+    my_cfg.idle_time_before_sleep_ms = 1000;
+
+    fpc_cmd_system_config_set_request(&my_cfg);
+}
+
 void log_print(const char *format, ...)
 {
 	char buffer[256];
@@ -130,28 +148,7 @@ void fpc_sample_logf(const char *format, ...)
 }
 #endif
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-	if (huart->Instance == huart6.Instance) {
-		uint16_t curr_cndtr = __HAL_DMA_GET_COUNTER(huart->hdmarx);
-
-		/*
-		 * Ignore IDLE Timeout when the received characters exactly filled up the DMA buffer and
-		 * DMA Rx Complete Interrupt is generated, but there is no new character during timeout.
-		 */
-		if (dma_uart_rx.flag && curr_cndtr == DMA_BUF_SIZE) {
-			dma_uart_rx.flag = 0;
-			return;
-		}
-
-		if (!dma_uart_rx.flag) {
-			dma_uart_rx.rx_complete_count++;
-		}
-		dma_uart_rx.flag = 0;
-
-		rx_available = true;
-	}
-}
+///////////// UART and DMA fonctions & IT /////////////
 
 void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)
 {
