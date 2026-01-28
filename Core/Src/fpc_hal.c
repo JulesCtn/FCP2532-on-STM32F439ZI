@@ -112,6 +112,7 @@ void log_print(const char *format, ...)
 
 	va_end(arglist);
 }
+
 #ifdef ENABLE_DEBUG_LOGS
 void fpc_sample_logf(const char *format, ...)
 {

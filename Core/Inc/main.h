@@ -66,6 +66,8 @@ void on_list_templates(int num_templates, uint16_t *template_ids);
 #define USER_BUTTON_Pin GPIO_PIN_13
 #define USER_BUTTON_GPIO_Port GPIOC
 #define USER_BUTTON_EXTI_IRQn EXTI15_10_IRQn
+#define LED1_Pin GPIO_PIN_0
+#define LED1_GPIO_Port GPIOB
 #define FPC2530_IF_CFG_1_Pin GPIO_PIN_14
 #define FPC2530_IF_CFG_1_GPIO_Port GPIOF
 #define FPC2530_IRQ_Pin GPIO_PIN_15
