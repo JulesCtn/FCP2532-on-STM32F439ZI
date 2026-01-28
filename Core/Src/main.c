@@ -35,13 +35,12 @@
 /* Application states */
 typedef enum {
     APP_STATE_WAIT_READY = 0,
-	APP_STATE_WAIT_NAVIGATION_DONE
-    /*APP_STATE_WAIT_VERSION,
+    APP_STATE_WAIT_VERSION,
     APP_STATE_WAIT_LIST_TEMPLATES,
     APP_STATE_WAIT_ENROLL,
     APP_STATE_WAIT_IDENTIFY,
     APP_STATE_WAIT_ABORT,
-    APP_STATE_WAIT_DELETE_TEMPLATES*/
+    APP_STATE_WAIT_DELETE_TEMPLATES
 } app_state_t;
 
 static int quit = 0;
@@ -61,7 +60,7 @@ static int n_templates_on_device = 0;
 /* Number of fingers left to enroll */
 static int n_fingers_to_enroll = N_FINGERS_TO_ENROLL;
 
-/*static void process_state(void)
+static void process_state(void)
 {
     app_state_t next_state = app_state;
 
@@ -142,37 +141,8 @@ static int n_fingers_to_enroll = N_FINGERS_TO_ENROLL;
     }
 
     if (next_state != app_state) {
-    	log_print("State transition %d -> %d\r\n", app_state, next_state);
+    	//log_print("State transition %d -> %d\r\n", app_state, next_state);
         app_state = next_state;
-    }
-}*/
-
-static void on_navigation(int gesture)
-{
-    switch(gesture) {
-        case CMD_NAV_EVENT_NONE:
-            log_print("Nav event: None\r\n");
-            break;
-        case CMD_NAV_EVENT_UP:
-            log_print("Nav event: Up\r\n");
-            break;
-        case CMD_NAV_EVENT_DOWN:
-            log_print("Nav event: Down\r\n");
-            break;
-        case CMD_NAV_EVENT_RIGHT:
-            log_print("Nav event: Right\r\n");
-            break;
-        case CMD_NAV_EVENT_LEFT:
-            log_print("Nav event: Left\r\n");
-            break;
-        case CMD_NAV_EVENT_PRESS:
-            log_print("Nav event: Press\r\n");
-            break;
-        case CMD_NAV_EVENT_LONG_PRESS:
-            log_print("Nav event: Long Press\r\n");
-            break;
-        default:
-            break;
     }
 }
 
@@ -182,9 +152,9 @@ static const fpc_cmd_callbacks_t cmd_cb = {
     .on_version = on_version,
     .on_enroll = on_enroll,
     .on_identify = on_identify,
-    .on_list_templates = on_list_templates,
-	.on_navigation = on_navigation
+    .on_list_templates = on_list_templates
 };
+
 /* Private variables ---------------------------------------------------------*/
 SPI_HandleTypeDef hspi1;
 
@@ -237,9 +207,8 @@ int main(void)
 	fpc_hal_wfi();
 
 	if (hal_check_button_pressed() > 200) {
-		//log_print("\nButton pressed\r\n");
-		//app_state = APP_STATE_WAIT_ABORT;
-		log_print("Button pressed, aborting navigation\r\n");
+		log_print("\nButton pressed\r\n");
+		app_state = APP_STATE_WAIT_ABORT;
 		fpc_cmd_abort();
 	}
 
@@ -250,7 +219,7 @@ int main(void)
 			HAL_Delay(100);
 			uart_host_rx_data_clear();
 		}
-		//process_state();
+		process_state();
 	}
   }
 }
@@ -265,15 +234,10 @@ void on_error(uint16_t error)
 
 void on_status(uint16_t event, uint16_t state)
 {
-	/*if (state & STATE_APP_FW_READY) {
+	if (state & STATE_APP_FW_READY) {
 		device_ready = 1;
 	}
-	device_state = state;*/
-	if (app_state == APP_STATE_WAIT_READY) {
-		app_state = APP_STATE_WAIT_NAVIGATION_DONE;
-		log_print("Starting navigation");
-		fpc_cmd_navigation_request(0);
-	}
+	device_state = state;
 }
 
 void on_version(char* version)
@@ -435,16 +399,16 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA1_Stream1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 2, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
   /* DMA1_Stream3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 3, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
   /* DMA2_Stream1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 4, 0);
+  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
   /* DMA2_Stream6_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream6_IRQn, 5, 0);
+  HAL_NVIC_SetPriority(DMA2_Stream6_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream6_IRQn);
 
 }

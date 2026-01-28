@@ -190,9 +190,9 @@ int uart_host_transmit(uint8_t *data, size_t size, uint32_t timeout, int flush)
     tx_done = false;
     uart_error = false;
 
-    HAL_GPIO_WritePin(FPC2530_CS_N_GPIO_Port, FPC2530_CS_N_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(FPC2530_CS_N_GPIO_Port, FPC2530_CS_N_Pin, GPIO_PIN_SET);
-    HAL_Delay(5);
+    //HAL_GPIO_WritePin(FPC2530_CS_N_GPIO_Port, FPC2530_CS_N_Pin, GPIO_PIN_RESET);
+    //HAL_GPIO_WritePin(FPC2530_CS_N_GPIO_Port, FPC2530_CS_N_Pin, GPIO_PIN_SET);
+    //HAL_Delay(5);
 
     status = HAL_UART_Transmit_DMA(&huart6, data, (uint16_t)size);
 
